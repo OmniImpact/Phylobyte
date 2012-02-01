@@ -1,0 +1,178 @@
+body{
+	background-color: white;
+	font-family: sans-serif;
+	font-size: 12pt;
+	background-image: url('gfx/grad_vert_black_transparent_long.png');
+	background-repeat: repeat-x;
+}
+
+h1{
+	background-color: #cc0000;
+	margin: 0;
+	padding: 0;
+	color: white;
+	font-size: 16pt;
+	text-shadow: 0.1em 0.1em 0.2em black;
+	margin-bottom: 4pt;
+	min-height: 38pt;
+	border-top-left-radius: 10pt;
+	border-top-right-radius: 10pt;
+	background-image: url('gfx/grad_vert_black_transparent.png');
+	background-position: 0 -80px;
+	background-repeat: repeat-x;
+	border: 1px solid #330000;
+}
+
+h2{
+	margin-bottom: 1em;
+	display: block;
+	font-size: 15pt;
+	color: #a20000;
+	font-weight: normal;
+	padding: 4pt;
+	text-align: left;
+	background-color: #E5E1D0;
+	background-image: url('gfx/grad_vert_black_transparent.png');
+	background-position: 0 -80px;
+	background-repeat: repeat-x;
+	text-shadow: 0em 0em 0.2em white;
+	border-top-left-radius: 10pt;
+	border-bottom-right-radius: 10pt;
+	border: 1px solid #afaf8f;
+}
+
+.quicklinks{
+	margin: 0;
+	padding: 0;
+	display: block;
+	float: right;
+	background-color: #a20000;
+	font-size: 10pt;
+	padding: 14pt;
+}
+
+.headtext{
+	display: inline-block;
+	padding: 6pt;
+	padding-top: 12pt;
+	padding-bottom: 0;
+}
+
+.container{
+	display: block;
+	margin-left: 10%;
+	margin-right: 10%;
+	min-width: 700px;
+	min-height: 420px;
+	background-color: white;
+	padding-left: 10pt;
+	padding-right: 10pt;
+}
+
+.leftcol{
+	display: block;
+	float: left;
+	width: 30%
+}
+
+.leftcol fieldset{
+	display: block;
+	border: 6pt solid gray;
+	padding: 1em;
+	background-color: white;
+}
+
+.leftcol legend{
+	display: block;
+	padding: 5pt;
+	padding-left: 8pt;
+	padding-right: 8pt;
+	border-top-left-radius: 6pt;
+	border-top-right-radius: 6pt;
+	background-color: white;
+}
+
+.leftcol label{
+	display: block;
+	float: left;
+	width: 30%;
+	text-align: right;
+}
+
+.leftcol input{
+	border: 1px solid gray;
+	width: 65%;
+	background-color: #ddd;
+	margin-bottom: .5em;
+}
+
+.leftcol input:focus{
+	background-color: white;
+	outline: none;
+	border: 1px solid #800;
+}
+
+.leftcolinner{
+	background-color: #666;
+}
+
+.logoblock{
+	display: block;
+	background-color: #383838;
+	padding: 6pt;
+	text-align: center;
+	border-bottom: 4pt solid white;
+}
+
+.rightcol{
+	display: block;
+	margin: 0;
+	padding: 0;
+	float: left;
+	width: 70%;
+}
+
+.rightcolinner{
+	margin-left: 4pt;
+	padding: 6pt;
+	padding-right: 0;
+	text-align: justify;
+}
+
+.leftlinks{
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	padding-top: 6pt;
+	padding-bottom: 8pt;
+	margin-left: 8pt;
+}
+
+.leftlinks a{
+	text-decoration: none;
+	color: white;
+	font-weight: bold;
+	display: block;
+	padding: 3pt;
+}
+.leftlinks a:hover{
+	background-color: #ccc;
+	color: black;
+}
+
+.clearme{
+	height: 0;
+	float: none;
+	clear: both;
+}
+
+.footer{
+	border-top: 2px solid #a20000;
+	padding: 4pt;
+	margin-top: 4pt;
+	text-align: center;
+	font-size: 70%;
+	color: gray;
+	float: none;
+	clear: both;
+}

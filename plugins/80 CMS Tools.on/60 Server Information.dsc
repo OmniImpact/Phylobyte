@@ -1,0 +1,1 @@
+View basic server information as a summary, or server details with phpinfo().

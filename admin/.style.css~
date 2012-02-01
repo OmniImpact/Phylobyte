@@ -1,0 +1,355 @@
+*{
+	margin: 0;
+	padding: 0;
+	font-size: 11pt;
+	font-family: sans-serif;
+}
+
+body{
+	margin: 0;
+	padding: 0;
+	background-color: #ddd;
+	background-image: url('gfx/left_col_tall_bg.png');
+}
+
+
+.header{
+	display: block;
+	border-bottom: 1px solid white;
+}
+
+.headertext{
+	position: absolute;
+	right: 12px;
+	top: 8px;
+	padding: 4pt;
+	padding-top: 2pt;
+	padding-bottom: 2pt;
+	border-radius: 5pt;
+	border: 1px outset #5eda5e;
+	font-size: 8pt;
+	font-weight: bold;
+	background-position: 0px -300px;
+	background-image: url('gfx/header_nav_gradient.png');
+}
+
+.top{
+	display: block;
+	color: white;
+	font-size: 140%;
+	background-color: #27a027;
+	background-image: url('gfx/header_gradient.png');
+	padding: .2em;
+	padding-top: .4em;
+}
+
+#dropdown{
+	display: block;
+	background-color: #259925;
+	background-image: url('gfx/header_nav_gradient.png');
+	color: white;
+	border: none;
+	line-height: 1;
+}
+
+#dropdown a{
+	display: block;
+	min-height: 1.2em;
+	color: white;
+	text-decoration: none;
+	font-size: 115%;
+	padding: 2pt;
+	padding-left: 9pt;
+	padding-right: 9pt;
+}
+
+#dropdown a:hover{
+	color: #bfb;
+	background-image: url('gfx/shader_1.png');
+}
+
+#dropdown ul{
+	list-style-type: none;
+	float: left;
+	margin-left: 0;
+}
+
+#dropdown ul li{
+	float: left;
+	padding: 0;
+	cursor: pointer;
+	border-right: 1pt solid #249924;
+	margin-left: 0;
+}
+#dropdown ul li ul li{
+	display: block;
+	float: none;
+	border: 1pt solid #249924;
+	margin-top: -1pt;
+	border-top: none;
+	margin-left: 0;
+}
+
+#dropdown li ul{
+	position: absolute;
+	background-color: none;
+	height: 0;
+	overflow: hidden;
+	min-height: 0;
+	margin-left: 0;
+}
+
+#dropdown li ul ul{
+	height: 0;
+	overflow: hidden;
+	background-color: none;
+	margin-left: 0;
+}
+
+#dropdown li ul a{
+	background-color: none;
+	border-top: 1px solid #249924;
+	background-image: url('gfx/shader_2.png');
+	color: #249924;
+}
+#dropdown li ul li:hover{
+	background-color: #249924;
+}
+#dropdown li ul a:hover{
+	background-image: url('gfx/shader_2.png');
+	color: #249924;
+}
+
+#dropdown li:hover ul {
+	height: auto;
+	overflow: visible;
+	border-top: 1pt solid #249924;
+} 
+
+.leftcol{
+	margin: 0;
+	padding: 0;
+	width: 79%;
+	float: left;
+	background-color: #ddd;
+	border-right: 1pt solid white;
+	border-bottom: 1pt solid white;
+}
+
+
+.leftcol form{
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: 10pt;
+	padding-bottom: 5pt;
+	border: 1px solid #444;
+	border-top: none;
+}
+
+.leftcol fieldset{
+	border: 0;
+	margin: 0;
+	padding: 0;
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.leftcol legend{
+	margin: 0;
+	padding: 2pt;
+	padding-left: 0;
+	padding-right: 0;
+	display: block;
+	width: 100%;
+	text-align: center;
+	color: white;
+	font-weight: bold;
+	font-size: 90%;
+	background-color: #27a027;
+	background-image: url('gfx/header_gradient.png');
+	border: 1px solid #444;
+	border-top-right-radius: 5pt;
+	border-top-left-radius: 5pt;
+}
+
+.leftcol label{
+	display: inline-block;
+	width: 35%;
+	text-align: right;
+	padding-right: 2%;
+}
+
+.leftcol input{
+	display: inline-block;
+	margin: 0;
+	padding: 1pt;
+	width: 60%;
+	margin-bottom: 6pt;
+	border: 1px solid #666;
+	background-color: #eee;
+}
+
+.leftcol input:hover{
+	background-color: white;
+}
+
+.leftcol input:focus{
+	border: 1px solid #249924;
+	background-color: white;
+	outline: none;
+}
+
+.leftcol fieldset hr{
+	border: none;
+	background-color: silver;
+	height: 1pt;
+	width: 90%;
+	margin-left: 5%;
+	margin-bottom: 6pt;
+}
+
+.rightcol{
+	margin: 0;
+	padding: 0;
+	width: 20%;
+	float: right;
+}
+
+.rightcol h3{
+	font-weight: lighter;
+	color: #249924;
+	font-size: 120%;
+	margin-bottom: .4em;
+}
+
+.rightcol p{
+	line-height: 130%;
+	color: #333;
+}
+
+.rightcolinner{
+	display: block;
+	margin-left: 1em;
+	margin-right: 1em;
+	margin-top: 1em;
+}
+
+.messagebox{
+	background-color: white;
+	padding: 0;
+	padding-left: 3pt;
+	padding-right: 3pt;
+	height: auto;
+	overflow: hidden;
+	border-left: 1pt solid #249924;
+	border-right: 1pt solid #249924;
+	border-bottom: 3pt solid #249924;
+	border-bottom-right-radius: 3pt;
+	border-bottom-left-radius: 3pt;
+	-webkit-box-shadow: 0 1pt 5pt rgba(0,0,0,0.4);
+	-moz-box-shadow: 0 1pt 5pt rgba(0,0,0,0.4);
+	box-shadow: 0 1pt 5pt rgba(0,0,0,0.4);
+}
+
+.messagebox .error{
+	margin-top: .5em;
+	padding: .4em;
+	border-radius: .5em;
+	text-align: center;
+	background-color: #cca2a2;
+	border: 1pt solid #732121;
+}
+.messagebox .alert{
+	margin-top: .5em;
+	padding: .4em;
+	border-radius: .5em;
+	text-align: center;
+	background-color: #f1ce64;
+	border: 1pt solid #785426;
+}
+.messagebox .notification{
+	margin-top: .5em;
+	padding: .4em;
+	border-radius: .5em;
+	text-align: center;
+	background-color: #a4d386;
+	border: 1pt solid #3f5a2f;
+}
+.messagebox .debug{
+	margin-top: .5em;
+	padding: .4em;
+	border-radius: .5em;
+	text-align: center;
+	background-color: #ddd;
+	border: 1pt solid #666;
+}
+
+.messageboxtab{
+	float: right;
+	display: block;
+	padding: 2pt;
+	padding-left: 4pt;
+	padding-right: 4pt;
+	margin-right: 4pt;
+	color: #eee;
+	background-color: #249924;
+	border-bottom-right-radius: 3pt;
+	border-bottom-left-radius: 3pt;
+	border-bottom: 2pt solid #096409;
+	cursor: pointer;
+	-webkit-box-shadow: 0 1pt 7pt rgba(0,0,0,0.5);
+	-moz-box-shadow: 0 1pt 7pt rgba(0,0,0,0.5);
+	box-shadow: 0 1pt 7pt rgba(0,0,0,0.5);
+}
+
+.messageboxtab:hover{
+	background-color: #148014;
+}
+
+.pluginbox{
+	border: 1pt solid #555;
+	border-radius: 1em;
+	padding: 1.2em;
+	background-color: white;
+	margin-left: 1em;
+	margin-right: 1em;
+	margin-bottom: 1em;
+	margin-top: 1em;
+}
+
+.pluginbox h2{
+	font-size: 140%;
+	color: gray;
+	line-height: 2em;
+	font-weight: lighter;
+}
+
+.home ul{
+	list-style-type: none;
+	line-height: 2em;
+	margin-left: 3em;
+}
+.home ul li{
+	display: block;
+}
+
+.footer{
+	text-align: center;
+	font-size: 80%;
+	color: #555;
+	padding: .5em;
+}
+
+.footer a{
+	font-size: 100%;
+	color: #444;
+}
+
+.floatfix{
+	float: none;
+	clear: both;
+	height: 0;
+	overflow: hidden;
+}

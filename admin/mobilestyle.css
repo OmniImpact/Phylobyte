@@ -1,0 +1,132 @@
+#dropdown{
+	display: block;
+	width: 100%;
+	background-color: #259925;
+	background-image: url('gfx/header_nav_gradient.png');
+	color: white;
+	border: none;
+	line-height: 1;
+}
+
+#dropdown a{
+	display: block;
+	min-height: 1.2em;
+	color: white;
+	background-image: url('gfx/header_nav_gradient.png');
+	text-decoration: none;
+	font-size: 115%;
+	padding: 6pt;
+	border-top: 2pt solid white;
+}
+
+#dropdown a:hover{
+	color: white;
+	background-image: url('gfx/header_gradient.png');
+}
+
+#dropdown ul{
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	float: none;
+	clear: both;
+	width: 100%;
+	border: none;
+}
+
+#dropdown ul li{
+	display: block;
+	float: none;
+	clear: both;
+	width: 100%;
+	padding: 0;
+	margin: 0;
+	border: none;
+}
+
+#dropdown li ul{
+	padding: 0;
+	margin: 0;
+	display: none;
+}
+
+.leftcol{
+	width: 100%;
+	border: none;
+	border-bottom: 2pt solid #555;
+}
+
+.leftcol form{
+	margin: 0;
+	border: 2pt solid #555;
+}
+
+.leftcol fieldset{
+	border: 0;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	margin-bottom: 1em;
+}
+
+.leftcol legend{
+	margin: 0;
+	padding: 3pt;
+	padding-left: 2em;
+	padding-right: 2em;
+	width: auto;
+	display: block;
+	text-align: left;
+	font-size: 90%;
+	background-color: #27a027;
+	background-image: url('gfx/header_gradient.png');
+	border: 1px solid #444;
+	border-bottom: none;
+	border-radius: 0;
+}
+
+.rightcol{
+	width: 100%;
+}
+
+.messageboxtab{
+	float: right;
+	display: block;
+	padding: 6pt;
+	font-size: 120%;
+	color: #eee;
+	background-color: #249924;
+	border-bottom-right-radius: 3pt;
+	border-bottom-left-radius: 3pt;
+	border-bottom: 2pt solid #096409;
+	cursor: pointer;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+}
+
+.pluginbox{
+	margin: 0;
+	border: none;
+	background-color: white;
+	border-radius: 0;
+}
+
+.pluginbox .breadcrumbs, .breadcrumbs{
+	border: none;
+	border-bottom: 2pt solid #555;
+	border-radius: 0;
+	padding-right: 10em;
+}
+
+.pluginbox .breadcrumbs a, .breadcrumbs a{
+	display: inline-block;
+	padding: 5pt;
+	border: 2pt solid #888;
+	background-color: white;
+	border-radius: 3pt;
+}
+
+.pluginbox .breadcrumbs a:hover, .breadcrumbs a:hover{
+	background-color: #ddd;
+}

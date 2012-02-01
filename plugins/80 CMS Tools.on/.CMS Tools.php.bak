@@ -1,0 +1,16 @@
+<?php
+$this->pageArea.='
+
+<h3><a href="?plugin=80%20CMS%20Tools&function=00%20Message%20Viewer" style="font-size: 140%;">Message Viewer</a></h3>
+<p>View the last 50 Messages, sorted by type.</p>
+
+
+<br/>
+<hr/>
+<br/>
+
+<h3><a href="?plugin=80%20CMS%20Tools&function=10%20Registry%20Editor" style="font-size: 140%;">Registry Editor</a></h3>
+<p>View and Edit Phylobyte\'s TinyRegistry Entries</p>
+
+';
+?>

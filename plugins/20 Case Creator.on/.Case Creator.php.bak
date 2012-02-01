@@ -1,0 +1,35 @@
+<?php
+
+$this->docArea.='
+<h3>
+	VetMedCases Case Creator
+</h3>
+
+<p>
+Please select an operation from the list to the left. You can also access these steps directly using the drop-down menu from the green navigation bar along the top of the page.
+</p>
+
+';
+
+$this->pageArea.='
+
+<h3><a href="?plugin=Case%20Creator&function=1%20Case%20Manager" style="font-size: 140%;">Case Manager</a></h3>
+<p>Create, edit, and archive cases.</p>
+
+
+<br/>
+<hr/>
+<br/>
+
+<h3><a href="?plugin=Case%20Creator&function=2%20Step%20Manager" style="font-size: 140%;">Step Manager</a></h3>
+<p>Create steps and paths to build the case.</p>
+
+<br/>
+<hr/>
+<br/>
+
+<h3><a href="?plugin=Case%20Creator&function=3%20Case%20Progress%20Viewer" style="font-size: 140%;">Case Progress Viewer</a></h3>
+<p>View user\'s progress on their cases.</p>
+
+';
+?>

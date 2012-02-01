@@ -1,0 +1,35 @@
+[09-Dec-2011 08:35:54] PHP Fatal error:  Call to a member function fetch() on a non-object in /home/vetmedca/public_html/plugins/80 CMS Tools.on/51 Manage Users.php on line 274
+[09-Dec-2011 08:36:08] PHP Fatal error:  Call to a member function fetchAll() on a non-object in /home/vetmedca/public_html/plugins/80 CMS Tools.on/51 Manage Users.php on line 274
+[09-Dec-2011 08:36:33] PHP Fatal error:  Call to a member function fetchAll() on a non-object in /home/vetmedca/public_html/plugins/80 CMS Tools.on/51 Manage Users.php on line 274
+[09-Dec-2011 09:25:20] PHP Fatal error:  Cannot use object of type PDOStatement as array in /home/vetmedca/public_html/plugins/80 CMS Tools.on/50 Manage Groups.php on line 12
+[09-Dec-2011 20:57:18] PHP Warning:  include_once(../plugins/DBView.on/dbview.php) [<a href='function.include-once'>function.include-once</a>]: failed to open stream: No such file or directory in /home/vetmedca/public_html/admin/phylobyte.php on line 232
+[09-Dec-2011 20:57:18] PHP Warning:  include_once() [<a href='function.include'>function.include</a>]: Failed opening '../plugins/DBView.on/dbview.php' for inclusion (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/vetmedca/public_html/admin/phylobyte.php on line 232
+[09-Dec-2011 20:57:18] PHP Warning:  include_once(../plugins/DBView.on/DBView.php) [<a href='function.include-once'>function.include-once</a>]: failed to open stream: No such file or directory in /home/vetmedca/public_html/admin/phylobyte.php on line 267
+[09-Dec-2011 20:57:18] PHP Warning:  include_once() [<a href='function.include'>function.include</a>]: Failed opening '../plugins/DBView.on/DBView.php' for inclusion (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/vetmedca/public_html/admin/phylobyte.php on line 267
+[09-Dec-2011 23:03:16] PHP Parse error:  syntax error, unexpected '{' in /home/vetmedca/public_html/admin/settings.php on line 8
+[10-Dec-2011 02:24:11] PHP Warning:  rename(..plugins/00 Pages.on,../plugins/00 Pages.no) [<a href='function.rename'>function.rename</a>]: No such file or directory in /home/vetmedca/public_html/admin/settings.php on line 15
+[10-Dec-2011 03:44:28] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 03:49:48] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 03:50:04] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 04:02:47] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 194
+[10-Dec-2011 04:08:30] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 194
+[10-Dec-2011 04:09:30] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 04:09:50] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 04:10:29] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 04:10:52] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 195
+[10-Dec-2011 04:13:00] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 196
+[10-Dec-2011 04:13:12] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 196
+[10-Dec-2011 04:15:15] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 197
+[10-Dec-2011 04:21:53] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 206
+[10-Dec-2011 04:22:36] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 204
+[10-Dec-2011 04:23:29] PHP Warning:  Invalid argument supplied for foreach() in /home/vetmedca/public_html/admin/phylobyte.php on line 206
+[12-Dec-2011 07:40:18] PHP Parse error:  syntax error, unexpected ')' in /home/vetmedca/public_html/plugins/80 CMS Tools.on/51 Manage Users.php on line 211
+[27-Dec-2011 23:13:25] PHP Parse error:  syntax error, unexpected T_STRING, expecting T_FUNCTION in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 5
+[27-Dec-2011 23:13:41] PHP Fatal error:  Call to undefined method ugp::messageAddDebug() in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 6
+[27-Dec-2011 23:13:57] PHP Fatal error:  Call to a member function messageAddDebug() on a non-object in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 6
+[27-Dec-2011 23:15:04] PHP Fatal error:  Call to a member function messageAddDebug() on a non-object in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 6
+[27-Dec-2011 23:16:03] PHP Fatal error:  Call to a member function messageAddDebug() on a non-object in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 6
+[06-Jan-2012 15:30:22] PHP Parse error:  syntax error, unexpected ')' in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 24
+[06-Jan-2012 15:30:26] PHP Parse error:  syntax error, unexpected ')' in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 24
+[06-Jan-2012 15:30:30] PHP Parse error:  syntax error, unexpected ')' in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 24
+[06-Jan-2012 15:30:35] PHP Parse error:  syntax error, unexpected ')' in /home/vetmedca/public_html/plugins/80 CMS Tools.on/cms tools.php on line 24

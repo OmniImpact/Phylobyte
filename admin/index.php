@@ -95,7 +95,7 @@ $PHYLOBYTE->build_finish();
 		<?php echo $PHYLOBYTE->docArea;?>
 	</div>
 </div>
-<? }else{ echo($PHYLOBYTE->mobileNav); }?>
+<?php }else{ echo($PHYLOBYTE->mobileNav); }?>
 
 <div style="float: none; clear: both; height: 0; overflow: hidden;">&nbsp;</div>
 <div class="footer">

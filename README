@@ -15,3 +15,12 @@ projects in a separate directory, you may use symlinks.
 root.
 ** This only works if your HTTP server is configured to allow symlinks.
 
+
+
+Arch Installation:
+1) Follow the steps on the Arch Linux LAMP wiki page (https://wiki.archlinux.org/index.php/LAMP)
+2) Uncomment the line ;extension=pdo_mysql.so
+
+MySQL Setup:
+
+... screw this, im tired.

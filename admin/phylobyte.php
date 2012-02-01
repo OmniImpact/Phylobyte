@@ -146,11 +146,11 @@ class phylobyte{
 		$pluginDirArray = scandir('../plugins');
 
 		foreach($pluginDirArray as $possiblePlugin) {
-			if(is_dir('../plugins/'.$possiblePlugin) && substr($possiblePlugin, -3) == '.on'){
+		    if(is_dir('../plugins/'.$possiblePlugin) && substr($possiblePlugin, -3) == '.on'){
 				//now we make sure the plugin has the minimal requirements
 				$pluginDir = $possiblePlugin;
 				$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
-				if(is_file('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.php') && is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+				if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php') && is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 					//we have the minimal plugin setup, so we can now generate navigation
 					$this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -3).'">'.$pluginName;
 						//if there is just one other page, we must make subnav.

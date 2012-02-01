@@ -1,1 +1,17 @@
 PLACEHOLDER README FILE
+
+To install this application, simply drop it into your DocumentRoot for 
+your HTTP server (configured for PHP modules and MySQL database 
+interaction).
+
+Alternatively, if you are like me and you keep all your development 
+projects in a separate directory, you may use symlinks.
+
+1) Navigate to your DocumentRoot for your HTTP server
+2) Run this command:
+    ln -s <location of Phylobyte> phylobyte
+
+* If you're using '/srv/http', then you need to run this command as 
+root.
+** This only works if your HTTP server is configured to allow symlinks.
+

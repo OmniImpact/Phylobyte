@@ -2,17 +2,17 @@
 
 class phylobyte{
 
-	public $messageStampBase;
-	public $messageStampItr = 0;
-	public $messageArea;
-	public $navigationArea;
-	public $mobileNav;
-	public $breadcrumbs;
-	public $pageArea;
-	public $docArea;
-	public $headArea;
-	public $pageTitle = 'Phylobyte CMS';
-	public $pluginFunctions;
+	static $messageStampBase;
+	static $messageStampItr = 0;
+	static $messageArea;
+	static $navigationArea;
+	static $mobileNav;
+	static $breadcrumbs;
+	static $pageArea;
+	static $docArea;
+	static $headArea;
+	static $pageTitle = 'Phylobyte CMS';
+	static $pluginFunctions;
 	
 	static $sessionUserInfo;
 	
@@ -110,7 +110,7 @@ class phylobyte{
 		//do logout
 		if($_REQUEST['phylobyte'] == 'logout'){
 			unset($_SESSION['loginid']);
-			$this->messageAddNotification('You are now logged out');
+			self::messageAddNotification('You are now logged out');
 		}
 		//do login
 		if(isset($_SESSION['loginid'])){
@@ -150,7 +150,7 @@ class phylobyte{
 				//now we make sure the plugin has the minimal requirements
 				$pluginDir = $possiblePlugin;
 				$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
-				if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php') && is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+				if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 					//we have the minimal plugin setup, so we can now generate navigation
 					$this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -3).'">'.$pluginName;
 						//if there is just one other page, we must make subnav.

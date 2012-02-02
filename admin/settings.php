@@ -82,7 +82,7 @@ foreach($pluginDirArray as $possiblePlugin) {
 		//now we make sure the plugin has the minimal requirements
 		$pluginDir = $possiblePlugin;
 		$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
-		if(is_file('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.php') && is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$onPluginsList.='
 			
@@ -127,7 +127,7 @@ foreach($pluginDirArray as $possiblePlugin) {
 		//now we make sure the plugin has the minimal requirements
 		$pluginDir = $possiblePlugin;
 		$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
-		if(is_file('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.php') && is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$offPluginsList.='
 			

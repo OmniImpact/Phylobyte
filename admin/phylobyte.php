@@ -303,14 +303,19 @@ class phylobyte{
 				$function = stripslashes($_GET['function']);
 				$this->pageTitle.=' | '.trim(preg_replace('#^\d+#', '', $function));
 				$this->breadcrumbs.=' &raquo; <a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.$function.'">'.trim(preg_replace('#^\d+#', '', $function)).'</a>';
-				$includePlugin = '../plugins/'.$pluginDir.'/'.$function.'.php';
+				
+				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.php';)){
+					$includePlugin = '../plugins/'.$pluginDir.'/'.$function.'.php';
+					include_once($includePlugin);
+				}
+				
 				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.html')){
 					$this->docArea=null;
 					$this->docArea.=stripslashes(file_get_contents('../plugins/'.$pluginDir.'/'.$function.'.html'));
 				}
 			}
 			
-			include_once($includePlugin);
+			
 		}
 		
 		

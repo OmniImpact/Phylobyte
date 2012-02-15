@@ -103,7 +103,8 @@ class phylobyte{
 
 	function messageStamp(){
 		$this->messageStampItr++;
-		return $this->messageStampBase.':'.$this->messageStampItr;
+		//this needs to use messagestampbase, and not the time directly
+		return time().':'.$this->messageStampItr;
 	}
 
 	function login(){
@@ -275,7 +276,9 @@ class phylobyte{
 			$pluginDir = stripslashes($_GET['plugin']).'.on';
 			$pluginName = trim(preg_replace('#^\d+#', '', stripslashes($_GET['plugin'])));
 			//include the class
-			include_once('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.php');
+			if(is_file('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.php')){
+				include_once('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.php');
+			}
 			//possibly include the css
 			if(is_file('../plugins/'.$pluginDir.'/'.strtolower($pluginName).'.css')){
 				$this->headArea.='
@@ -295,18 +298,25 @@ class phylobyte{
 			if(!isset($_GET['function'])){
 				//we include the default
 				$includePlugin = '../plugins/'.$pluginDir.'/'.$pluginName.'.php';
+
+				if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+					$includePlugin = '../plugins/'.$pluginDir.'/'.$pluginName.'.php';
+					include_once($includePlugin);
+				}
+				
 				if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.html')){
 					$this->docArea.=stripslashes(file_get_contents('../plugins/'.$pluginDir.'/'.$pluginName.'.html'));
 				}
+				
 			}else{
 				//we include the function
 				$function = stripslashes($_GET['function']);
 				$this->pageTitle.=' | '.trim(preg_replace('#^\d+#', '', $function));
 				$this->breadcrumbs.=' &raquo; <a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.$function.'">'.trim(preg_replace('#^\d+#', '', $function)).'</a>';
 				
-				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.php';)){
-					$includePlugin = '../plugins/'.$pluginDir.'/'.$function.'.php';
-					include_once($includePlugin);
+				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.php')){
+					$includeFunction = '../plugins/'.$pluginDir.'/'.$function.'.php';
+					include_once($includeFunction);
 				}
 				
 				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.html')){
@@ -342,7 +352,7 @@ class phylobyte{
 		$GLOBALS['MESSAGES']->push($this->messageStamp(), '#n.'.$notice.'##.');
 	}
 	function messageAddDebug($debug){
-		$GLOBALS['MESSAGES']->push($this->messageStamp(), '#d.'.$debug.'##.');
+		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#d.'.$debug.'##.');
 	}
 }
 

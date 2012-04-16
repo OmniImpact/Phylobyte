@@ -5,8 +5,7 @@
  
 <head> 
  
-	<title>Vetmedcases.com</title> 
-<link rel="stylesheet" type="text/css" href="http://www.ncsu.edu/brand/utility-bar/iframe/css/utility_bar_iframe.css" media="screen" />
+	<title>Phylobyte Generic Website</title> 
 <link rel="stylesheet" type="text/css" href="oi_reset.css">
 <link rel="stylesheet" type="text/css" href="style.css">
  

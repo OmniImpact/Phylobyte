@@ -23,6 +23,7 @@ class phylobyte{
 		try{
 			include('../data/database.vars.php');
 			$this->phylobyteDB = new PDO('mysql:host=localhost;dbname='.$DBMASTERDB, $DBUSER, $DBPASSWORD);
+			$GLOBALS['PHYLOBYTEDB'] = $this->phylobyteDB;
 		}catch(PDOException $e){
 			$this->messageAddDebug('Failed to open database: '.$e);
 		}
@@ -102,9 +103,9 @@ class phylobyte{
 	}
 
 	function messageStamp(){
-		$this->messageStampItr++;
+		$GLOBALS['MESSAGESTAMPITR']++;
 		//this needs to use messagestampbase, and not the time directly
-		return time().':'.$this->messageStampItr;
+		return time().':'.$GLOBALS['MESSAGESTAMPITR']++;
 	}
 
 	function login(){
@@ -343,13 +344,13 @@ class phylobyte{
 	}
 	
 	function messageAddAlert($alert){
-		$GLOBALS['MESSAGES']->push($this->messageStamp(), '#a.'.$alert.'##.');
+		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#a.'.$alert.'##.');
 	}
 	function messageAddError($error){
-		$GLOBALS['MESSAGES']->push($this->messageStamp(), '#e.'.$error.'##.');
+		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#e.'.$error.'##.');
 	}
 	function messageAddNotification($notice){
-		$GLOBALS['MESSAGES']->push($this->messageStamp(), '#n.'.$notice.'##.');
+		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#n.'.$notice.'##.');
 	}
 	function messageAddDebug($debug){
 		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#d.'.$debug.'##.');

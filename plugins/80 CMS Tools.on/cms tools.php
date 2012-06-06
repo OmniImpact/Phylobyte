@@ -2,48 +2,130 @@
 
 class ugp{
 
- function __construct(){
-		//$PHYLOBYTE = new phylobyte;
-		phylobyte::messageAddDebug('Constructed UGP');
+	static $pDB;
+
+	function __construct(){
+		$this->pDB = $GLOBALS['PHYLOBYTEDB'];
 	}
 
-	function group_put($groupArray, $overwrite = false){
+	function group_put($groupArray){
 		//take in a group array, write it to the database
-		//if the group exists, by default, fail
-		//if overwrite is true, update the group
-	}
+		//use replace, so it will overwrite if an ID is provided
 
-	function group_isLastAdmin($groupID){
-		//return TRUE if last Admin group
+		//make sure we don't change the admin group
+		if($groupArray['id'] == 1){
+			phylobyte::messageAddAlert('Please note that "admin" is a special group that you can not rename or delete.');
+			$groupArray['name'] = 'admin';
+		}
 
-	}
-
-	function group_get($groupID, $delete = false){
-		//if delete is true, delete the group,
-		//otherwise, simply read the group, and return an array
-		if($delete === false){
-				//try to delete group
-				//delete if not the last admin group else, fail
+		
+		$name = $this->pDB->quote($groupArray['name']);
+		$description = $this->pDB->quote($groupArray['description']);
+		$optional = ($groupArray['id'] != '' ? 'id,' : '');
+		$id = ($groupArray['id'] != '' ? $this->pDB->quote($groupArray['id']).',' : '');
+		$query = $this->pDB->prepare("
+			REPLACE INTO p_groups ($optional name, description )
+			VALUES ($id $name, $description ); ");
+		if($query->execute()){
+			phylobyte::messageAddNotification('Successfully updated groups.');
+			return true;
+		}else{
+			phylobyte::messageAddError('Error updating groups.');
+			return false;
 		}
 	}
 
-	function groups_get($groupID, $groupsFilter){
-		//if gruoupID, returh array, otherwise return multiple array
+	function group_delete($groupID){
+
+		$delete = $this->group_deleteable($groupID);
+		if($delete === true){
+			$this->pDB->quote($groupID);
+			if($this->pDB->exec("
+				DELETE FROM p_groups
+				WHERE id=$groupID;")
+			){ phylobyte::messageAddNotification('Successfully deleted group.'); }
+		}else{
+			phylobyte::messageAddError('The group could not be deleted: '.$delete);
+		}
+
 	}
 
-	function group_format($groupID, $formatString){
-		//take in a string to format based on 
+	function group_deleteable($groupID){
+		//return TRUE if safe to delete
+		//otherwise, return the error
+
+		$group = $this->group_get($groupID);
+		if($group['id'] == 1){
+			return 'You can not delete the Admin group.';
+		}elseif($group['members'] != 0){
+			return 'You can not delete a group that still has members.';
+		}elseif($group['id'] == ''){
+			return 'The group you are trying to delete does not exist.';
+		}else{
+			return true;
+		}
+		
 	}
+
+	function group_get($groupID, $groupsFilter = '', $delete = false){
+		//if gruoupID, return array, otherwise return multiple array
+		if($groupID != null){
+			$group = $this->pDB->prepare("
+				SELECT *, (
+					SELECT COUNT(*)
+					FROM p_users
+					WHERE primarygroup=p_groups.id
+					) as members
+				FROM p_groups WHERE id=$groupID;");
+			$group->execute();
+			$group = $group->fetch();
+			return $group;
+		}else{
+			$groups = $this->pDB->prepare("
+				SELECT *, (
+					SELECT COUNT(*)
+					FROM p_users
+					WHERE primarygroup=p_groups.id
+					) as members
+				FROM p_groups
+				WHERE name LIKE '%$groupsFilter%';");
+			$groups->execute();
+			$groups = $groups->fetchAll();
+			return $groups;
+		}
+	}
+
+	function group_format($groupsArray, $formatString){
+		//take in an array of groups, format based on the string
+		// %i% = id
+		// %n% = name
+		// %d% = description
+		// %m% = members
+
+		$result = null;
+		
+		foreach($groupsArray as $group) {
+		    $needles = array(
+				'%i%',
+				'%n%',
+				'%d%',
+				'%m%'
+		    );
+		    $replacements = array(
+				$group['id'],
+				$group['name'],
+				$group['description'],
+				$group['members']
+		    );
+		    $result.=str_replace($needles, $replacements, $formatString);
+		}
+		
+		return $result;
+	}
+
 
 }
 
 $GLOBALS['UGP'] = new ugp;
 
-// function genRandomString($characters = '0123456789abcdefghijklmnopqrstuvwxyz', $length = 10) {
-// 		$string = '';
-// 		for ($p = 0; $p < $length; $p++) {
-// 			$string .= $characters[mt_rand(0, strlen($characters))];
-// 		}
-// 		return $string;
-// 	}
 ?> 

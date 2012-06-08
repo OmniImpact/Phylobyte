@@ -18,8 +18,21 @@ class ugp{
 			$groupArray['name'] = 'admin';
 		}
 
-		
 		$name = $this->pDB->quote($groupArray['name']);
+		$id = $this->pDB->quote($groupArray['id']);
+		//check if the group exists
+		$group = $this->pDB->prepare("
+			SELECT name
+			FROM p_groups WHERE name=$name AND id<>$id;");
+		$group->execute();
+		$group = $group->fetchAll();
+
+		if(count($group) >= 1){
+			phylobyte::messageAddError('Failed to update groups.');
+			phylobyte::messageAddAlert('A group with that name already exists.');
+			return false;
+		}
+		
 		$description = $this->pDB->quote($groupArray['description']);
 		$optional = ($groupArray['id'] != '' ? 'id,' : '');
 		$id = ($groupArray['id'] != '' ? $this->pDB->quote($groupArray['id']).',' : '');
@@ -35,6 +48,16 @@ class ugp{
 		}
 	}
 
+
+	function  user_put($userArray){
+		//must have a unique user name
+		//check valid email
+		//generate password if requested
+		//dont change group if last admin or self
+		
+		return  true;
+	}
+
 	function group_delete($groupID){
 
 		$delete = $this->group_deleteable($groupID);
@@ -48,6 +71,12 @@ class ugp{
 			phylobyte::messageAddError('The group could not be deleted: '.$delete);
 		}
 
+	}
+
+	function user_delete($userID){
+		//check deleteable
+		
+		return true;
 	}
 
 	function group_deleteable($groupID){
@@ -66,8 +95,13 @@ class ugp{
 		}
 		
 	}
+	
+	function user_deleteable($userID){
+		//can't delete last admin or self
+		return true;
+	}
 
-	function group_get($groupID, $groupsFilter = '', $delete = false){
+	function group_get($groupID, $groupsFilter = ''){
 		//if gruoupID, return array, otherwise return multiple array
 		if($groupID != null){
 			$group = $this->pDB->prepare("
@@ -93,6 +127,11 @@ class ugp{
 			$groups = $groups->fetchAll();
 			return $groups;
 		}
+	}
+
+	function user_get($userID, $filter = ''){
+		//return array or multiple arrays
+		return true;
 	}
 
 	function group_format($groupsArray, $formatString){
@@ -121,6 +160,11 @@ class ugp{
 		}
 		
 		return $result;
+	}
+
+	function user_format($usersArray, $formatString, $groupFormatString = '%n%'){
+		//format the user array
+		return true;
 	}
 
 

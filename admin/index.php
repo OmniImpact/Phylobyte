@@ -6,6 +6,7 @@ $GLOBALS['MESSAGES']->open('__pmessages');
 include('oi_mobilesupport.php');
 include('phylobyte.php');
 $MS = new oi_mobilesupport;
+$GLOBALS['MS'] = $MS;
 $GLOBALS['PHYLOBYTE'] = new phylobyte;
 $PHYLOBYTE->build_finish();
 
@@ -34,8 +35,12 @@ $PHYLOBYTE->build_finish();
 <div class="header">
 <div class="top">
 	<a href="?"><img src="gfx/logo_white_mono.png"/></a>
-<div class="headertext">
-<?php echo date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-size: 7pt;">'.date('A').'</span>'; ?>
+<div class="headertext" <?php $MS->mobileEcho('style="top: 6px;"');?>>
+<?php
+$MS->mobileEcho(
+date('l F jS, Y').'<br/>'.date('g:i ').'<span style="font-size: 7pt;">'.date('A').'</span>',
+date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-size: 7pt;">'.date('A').'</span>'
+); ?>
 </div>
 </div>
 	<div id="dropdown">

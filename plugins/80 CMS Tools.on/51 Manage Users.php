@@ -248,11 +248,26 @@ $this->pageArea.= '
 }else{
 
 //query the users to populate the table
-$userList = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE username LIKE '%{$_SESSION['user_list_filter']}%' ORDER BY username LIMIT {$_SESSION['user_list_limit']};");
-$userList->execute();
-$userList = $userList->fetchAll();
+$userList = $GLOBALS['UGP']->user_get(null, $_SESSION['user_list_filter'], $_SESSION['user_list_limit']);
 
-$userListTable = null;
+$userListFormat = '
+	<tr id="u_table_row_%i%" class="table_row_normal">
+		<td style="text-align: center;">
+		<input type="radio" name="u_uid" value="%i%"
+		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'u_table_row_%i%\', \'table_row_normal\', \'table_row_highlight\');"
+		style="cursor: pointer;"/>
+		</td>
+		<td>%u%</td>
+		<td>%G%</td>
+		<td>%fn% %ln%</td>
+		<td>%e%</td>
+		<td style="text-align: center; font-weight: bold;"><span style="color: %sC%;">%s%</span></td>
+	</tr>
+';
+
+$userListTable = $GLOBALS['UGP']->user_format($userList, $userListFormat);
+
+/* $userListTable = null;
 foreach($userList as $userArray){
 	switch($userArray['status']){
 
@@ -297,7 +312,7 @@ foreach($userList as $userArray){
 	</tr>
 	';
 }
-
+*/
 
 
 $this->pageArea.= '

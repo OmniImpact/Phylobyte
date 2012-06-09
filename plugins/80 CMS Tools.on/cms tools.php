@@ -112,7 +112,7 @@ class ugp{
 					) as members
 				FROM p_groups WHERE id=$groupID;");
 			$group->execute();
-			$group = $group->fetch();
+			$group = $group->fetchAll();
 			return $group;
 		}else{
 			$groups = $this->pDB->prepare("
@@ -129,9 +129,33 @@ class ugp{
 		}
 	}
 
-	function user_get($userID, $filter = ''){
+	function user_get($userID, $filter = '', $limit = 100, $orderBy = 'username'){
 		//return array or multiple arrays
-		return true;
+
+		//if gruoupID, return array, otherwise return multiple array
+		if($userID != null){
+			$user = $this->pDB->prepare("
+				SELECT *
+				FROM p_users WHERE id=$userID
+				ORDER BY $orderBy
+				LIMIT $limit;");
+			$user->execute();
+			$user = $user->fetchAll();
+			return $user;
+		}else{
+			$users = $this->pDB->prepare("
+				SELECT *
+				FROM p_users
+				WHERE fname LIKE '%$filter%' or
+				lname LIKE '%$filter%' or email LIKE '%$filter%' or
+				description LIKE '%$filter%' or username LIKE '%$filter%'
+				ORDER BY $orderBy
+				LIMIT $limit;");
+			$users->execute();
+			$users = $users->fetchAll();
+			return $users;
+		}
+		
 	}
 
 	function group_format($groupsArray, $formatString){
@@ -162,9 +186,75 @@ class ugp{
 		return $result;
 	}
 
-	function user_format($usersArray, $formatString, $groupFormatString = '%n%'){
-		//format the user array
-		return true;
+	function user_format($usersArray, $formatString = '%i%, %u% <br/>', $groupFormatString = '%n%'){
+		//take in an array of groups, format based on the string
+		// %i% = id
+		// %u% = username
+
+		phylobyte::messageAddDebug(print_r($usersArray, true));
+
+		$result = null;
+
+		foreach($usersArray as $userArray) {
+
+			switch($userArray['status']){
+
+				case 'active':
+					$color = '#080';
+				break;
+
+				case 'disabled':
+					$color = '#008';
+					$status = '<span style="color: #008;">Disabled</span>';
+				break;
+
+				case 'suspended':
+					$color = '#800';
+					$status = '<span style="color: #800;">Suspended</span>';
+				break;
+
+				case 'flagged':
+					$color = '#540';
+					$status = '<span style="color: #540;">Flagged</span>';
+				break;
+
+				default:
+						$color = '#444';
+					if(ctype_digit($userArray['status'])){
+						$color = '#080';
+						$userArray['status'] = 'Reserved';
+					}else{
+						$userArray['status'] = ucfirst($userArray['status']);
+					}
+			}
+		
+		    $needles = array(
+				'%i%',
+				'%u%',
+				'%fn%',
+				'%ln%',
+				'%e%',
+				'%s%',
+				'%g%',
+				'%G%',
+				'%sC%'
+		    );
+		    $replacements = array(
+				$userArray['id'],
+				$userArray['username'],
+				$userArray['fname'],
+				$userArray['lname'],
+				$userArray['email'],
+				$userArray['status'],
+				$userArray['primarygroup'],
+				$this->group_format($this->group_get($userArray['primarygroup']), '%n%'),
+				$color
+		    );
+		    
+		    $result.=str_replace($needles, $replacements, $formatString);
+		}
+
+		return $result;
 	}
 
 

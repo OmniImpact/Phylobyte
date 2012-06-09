@@ -73,14 +73,14 @@ The "Messages" slider, called the "Message Pile" contains often useful feedback 
 </p>';
 
 $this->pageArea = '
-<img src="gfx/logo_color_md.png" />
+<img src="gfx/logo_color_md.png" style="max-width: 100%;"/>
 <div style="float: right; width: 80%;">
 	<h2>Love your website. Make it grow.</h2>
 </div>
 
 <div class="floatfix">&nbsp;</div>
 
-<fieldset style="float: right; width: 40%; margin-right: 15%;">
+<fieldset style="float: right; '.$GLOBALS['MS']->mobileReturn('width: 90%; margin-right: 5%;', 'width: 40%; margin-right: 15%;').'">
 	<legend>Log In</legend>
 <form action="?" method="POST" style="border-bottom: none; padding-bottom: 0;">
 	<label for="p_username">User Name</label><input type="text" name="p_username" value="'.$currentUserName.'" id="defaultInput"/><br/>

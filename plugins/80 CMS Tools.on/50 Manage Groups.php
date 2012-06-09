@@ -43,19 +43,21 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	$this->breadcrumbs.=' &raquo; Edit Group';
 
 	$group = $GLOBALS['UGP']->group_get($_POST['g_groupid']);
-
-	$this->pageArea.='
+	
+	$groupEditTemplate='
 	<fieldset>
 		<legend>Update Group Information</legend>
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
-		<input type="hidden" name="g_groupid" value="'.$group['id'].'" />
-		<label for="g_name">Group Name</label><input type="text" name="g_name" value="'.$group['name'].'"/><br/>
-		<label for="g_desc">Description</label><input type="text" name="g_desc" value="'.$group['description'].'"/><br/>
+		<input type="hidden" name="g_groupid" value="%i%" />
+		<label for="g_name">Group Name</label><input type="text" name="g_name" value="%n%"/><br/>
+		<label for="g_desc">Description</label><input type="text" name="g_desc" value="%d%"/><br/>
 		<label for="g_submit">&nbsp;</label><input type="submit" name="g_submit" value="Save Group" />
 		<label for="g_cancel">&nbsp;</label><input type="submit" name="g_cancel" value="Cancel Editing" />
 	</form>
 	</fieldset>
 	';
+	
+	$this->pageArea.=$GLOBALS['UGP']->group_format($group, $groupEditTemplate);
 
 	$this->docArea='
 	<h3>Edit Group</h3>

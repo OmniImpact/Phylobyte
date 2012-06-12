@@ -110,7 +110,7 @@ class ugp{
 					FROM p_users
 					WHERE primarygroup=p_groups.id
 					) as members
-				FROM p_groups WHERE id=$groupID;");
+				FROM p_groups WHERE id=$groupID ORDER BY name;");
 			$group->execute();
 			$group = $group->fetchAll();
 			return $group;
@@ -122,7 +122,7 @@ class ugp{
 					WHERE primarygroup=p_groups.id
 					) as members
 				FROM p_groups
-				WHERE name LIKE '%$groupsFilter%';");
+				WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
 			$groups->execute();
 			$groups = $groups->fetchAll();
 			return $groups;
@@ -191,8 +191,6 @@ class ugp{
 		// %i% = id
 		// %u% = username
 
-		phylobyte::messageAddDebug(print_r($usersArray, true));
-
 		$result = null;
 
 		foreach($usersArray as $userArray) {
@@ -234,6 +232,9 @@ class ugp{
 				'%fn%',
 				'%ln%',
 				'%e%',
+				'%p%',
+				'%P%',
+				'%d%',
 				'%s%',
 				'%g%',
 				'%G%',
@@ -245,6 +246,9 @@ class ugp{
 				$userArray['fname'],
 				$userArray['lname'],
 				$userArray['email'],
+				$userArray['personalphone'],
+				$userArray['publicphone'],
+				$userArray['description'],
 				$userArray['status'],
 				$userArray['primarygroup'],
 				$this->group_format($this->group_get($userArray['primarygroup']), '%n%'),

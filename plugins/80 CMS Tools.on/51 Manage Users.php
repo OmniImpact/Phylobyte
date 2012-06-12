@@ -25,13 +25,19 @@ if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) == n
 	$_POST['u_submit'] = null;
 }
 
+//check that a user name is provided if trying to add a user.
+if($_POST['u_submit'] == 'Edit User' && trim(stripslashes($_POST['u_uid'])) == null ){
+	$this->messageAddAlert('You must select a user to edit.');
+	$_POST['u_submit'] = null;
+}
+
 if($_POST['u_submit'] == 'Delete User'){
 		$this->messageAddAlert('Try To delete user...');
 }
 
 //do the rest of the checks for a new user. if it is all good, add the user, issue a success message, and clear 'Add User'
-if($_POST['u_submit'] == 'Save User Account'){
-	$this->messageAddAlert('Create/Update User Account');
+if($_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Create User Account'){
+	$this->messageAddAlert('Updating User Information');
 }
 
 //a little javascript
@@ -85,16 +91,8 @@ if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) != n
 	';
 	
 	//list of existing groups
-	$groupList = $this->phylobyteDB->prepare("SELECT * FROM p_groups ORDER BY name;");
-	$groupList->execute();
-	$groupList = $groupList->fetchAll();
-	
-	$groupListSelect = null;
-	foreach($groupList as $groupArray){
-		$groupListSelect.='
-		<option value="'.$groupArray['id'].'">'.$groupArray['name'].'</option>
-		';
-	}
+	$groupList = $GLOBALS['UGP']->group_get(null);
+	$groupListSelect = $GLOBALS['UGP']->group_format($groupList, '<option value="%i%">%n%</option>');
 
 $this->pageArea.= '
 
@@ -135,21 +133,8 @@ $this->pageArea.= '
 
 $this->breadcrumbs.=' &raquo; Edit User';
 
-	//get user information
-	$u_uid = $this->phylobyteDB->quote(stripslashes($_POST['u_uid']));
-	$userExists = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id=$u_uid");
-	$userExists->execute();
-	$userExists = $userExists->fetch();
-	$_POST['u_name'] = $userExists['username'];
-	$_POST['u_fname'] = $userExists['fname'];
-	$_POST['u_lname'] = $userExists['lname'];
-	$_POST['u_email'] = $userExists['email'];
-	$_POST['u_status'] = $userExists['status'];
-	$_POST['u_personalp'] = $userExists['personalphone'];
-	$_POST['u_publicp'] = $userExists['publicphone'];
-	$_POST['u_description'] = $userExists['description'];
-
-
+	$userExists = $GLOBALS['UGP']->user_get(stripslashes($_POST['u_uid']));
+	
 
 //list of statuses
 switch($userExists['status']){
@@ -179,18 +164,11 @@ switch($userExists['status']){
 }
 
 $statuses = '
-<option value="'.$userExists['status'].'">Preserve status: '.$status.'</option>
-<option value="active">Active</option>
-<option value="disabled">Disabled</option>
-<option value="suspended">Suspended</option>
-<option value="flagged">Flagged</option>
-<option value="reserved">Reserved (No password changes allowed)</option>
+
 ';
 
 //list of existing groups
-$groupList = $this->phylobyteDB->prepare("SELECT * FROM p_groups ORDER BY name;");
-$groupList->execute();
-$groupList = $groupList->fetchAll();
+$groupList = $GLOBALS['UGP']->group_get(null);
 
 $groupListSelect = null;
 foreach($groupList as $groupArray){
@@ -204,25 +182,29 @@ foreach($groupList as $groupArray){
 	';
 }
 	
-$this->pageArea.= '
+$this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 
 <fieldset>
 	<legend>Edit User</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
-	<input type="hidden" name="u_initialusername" value="'.$_POST['u_name'].'" />
-	<input type="hidden" name="u_uid" value="'.$_POST['u_uid'].'" />
-	<label for="u_name">User Name</label><input type="text" name="u_name" value="'.$_POST['u_name'].'"/><br/>
-	<label for="u_fname">First Name</label><input type="text" name="u_fname" value="'.$_POST['u_fname'].'"/><br/>
-	<label for="u_lname">Last Name</label><input type="text" name="u_lname" value="'.$_POST['u_lname'].'"/><br/>
-	<label for="u_email">e-Mail Address</label><input type="text" name="u_email" value="'.$_POST['u_email'].'"/><br/>
-	<label for="u_personalp">Personal Phone</label><input type="text" name="u_personalp" value="'.$_POST['u_personalp'].'"/><br/>
-	<label for="u_publicp">Public Phone</label><input type="text" name="u_publicp" value="'.$_POST['u_publicp'].'"/><br/>
+	<input type="hidden" name="u_uid" value="%i%" />
+	<label for="u_name">User Name</label><input type="text" name="u_name" value="%u%"/><br/>
+	<label for="u_fname">First Name</label><input type="text" name="u_fname" value="%fn%"/><br/>
+	<label for="u_lname">Last Name</label><input type="text" name="u_lname" value="%ln%"/><br/>
+	<label for="u_email">e-Mail Address</label><input type="text" name="u_email" value="%e%"/><br/>
+	<label for="u_personalp">Personal Phone</label><input type="text" name="u_personalp" value="%p%"/><br/>
+	<label for="u_publicp">Public Phone</label><input type="text" name="u_publicp" value="%P%"/><br/>
 	<label for="u_description">Personal Description</label>
-	<textarea rows="6" name="u_description" id="p_description">'.$_POST['u_description'].'</textarea>
+	<textarea rows="6" name="u_description" id="p_description">%d%</textarea>
 	<hr/>
 	<label for="u_status">Account Status</label>
 	<select name="u_status">
-		'.$statuses.'
+		<option value="%s%">Preserve status: %s%</option>
+		<option value="active">Active</option>
+		<option value="disabled">Disabled</option>
+		<option value="suspended">Suspended</option>
+		<option value="flagged">Flagged</option>
+		<option value="reserved">Reserved (No password changes allowed)</option>
 	</select><br/>
 	<label for="u_primarygroup">Primary Group</label>
 	<select name="u_primarygroup">
@@ -243,7 +225,7 @@ $this->pageArea.= '
 </form>
 </fieldset>
 
-';
+');
 
 }else{
 
@@ -266,53 +248,6 @@ $userListFormat = '
 ';
 
 $userListTable = $GLOBALS['UGP']->user_format($userList, $userListFormat);
-
-/* $userListTable = null;
-foreach($userList as $userArray){
-	switch($userArray['status']){
-
-		case 'active':
-			$status = '<span style="color: #080;">Active</span>';
-		break;
-
-		case 'disabled':
-			$status = '<span style="color: #008;">Disabled</span>';
-		break;
-
-		case 'suspended':
-			$status = '<span style="color: #800;">Suspended</span>';
-		break;
-
-		case 'flagged':
-			$status = '<span style="color: #540;">Flagged</span>';
-		break;
-
-		default:
-			if(ctype_digit($userArray['status'])){
-				$status = '<span style="color: #080;">Reserved</span>';
-			}else{
-				$status = ucfirst($userArray['status']);
-			}
-	}
-	
-	$groupQuery = $this->phylobyteDB->prepare("SELECT name FROM p_groups WHERE id={$userArray['primarygroup']}");
-	$groupQuery->execute();
-	$userGroup = $groupQuery->fetchAll();
-	$userGroup = $userGroup[0][0];
-	
-	$userListTable.='
-	<tr id="u_table_row_'.$userArray['id'].'" class="table_row_normal">
-		<td style="text-align: center;">
-		<input type="radio" name="u_uid" value="'.$userArray['id'].'"
-		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'u_table_row_'.$userArray['id'].'\', \'table_row_normal\', \'table_row_highlight\');"
-		style="cursor: pointer;"/>
-		</td>
-		<td>'.$userArray['username'].'</td><td>'.$userGroup.'</td><td>'.$userArray['fname'].' '.$userArray['lname'].'</td><td>'.$userArray['email'].'</td>
-		<td style="text-align: center; font-weight: bold;">'.$status.'</td>
-	</tr>
-	';
-}
-*/
 
 
 $this->pageArea.= '

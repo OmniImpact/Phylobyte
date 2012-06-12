@@ -11,23 +11,122 @@ class phylobyte{
 	static $pageArea;
 	static $docArea;
 	static $headArea;
-	static $pageTitle = 'Phylobyte CMS';
+	static $pageTitle;
 	static $pluginFunctions;
 	
 	static $sessionUserInfo;
+	static $sessionDbInfo;
 	
 	static $phylobyteDB;
 
 	function __construct(){
 		$this->messageStampBase = time();
 		try{
-			include('../data/database.vars.php');
-			$this->phylobyteDB = new PDO('mysql:host=localhost;dbname='.$DBMASTERDB, $DBUSER, $DBPASSWORD);
+			if(count($_SESSION['dbinfo']) < 2){
+				if(is_file('../data/dbconfig.array')){
+					$_SESSION['dbinfo'] = unserialize(file_get_contents('../data/dbconfig.array'));
+				}else{
+					session_destroy();
+					session_start();
+					include('dbsetup.php');
+					if(is_file('../data/dbconfig.array')){
+						$_SESSION['dbinfo'] = unserialize(file_get_contents('../data/dbconfig.array'));
+						$this->sessionDbInfo = $_SESSION['dbinfo'];
+					}else{
+						return false;
+					}
+				}
+			}else{
+				$this->sessionDbInfo = $_SESSION['dbinfo'];
+			}
+			
+			if($this->sessionDbInfo['dbt'] == 'MySQL'){
+				try{
+					$this->phylobyteDB = new PDO('mysql:host='.$this->sessionDbInfo['dbh'].';dbname='.$this->sessionDbInfo['dbn'], $this->sessionDbInfo['dbu'], $this->sessionDbInfo['dbp']);
+				}catch(PDOException $e){
+					$this->messageAddDebug('Failed to open database: '.$e);
+				}
+			}elseif($this->sessionDbInfo['dbt'] == 'PostgreSQL'){
+				try{
+					$this->phylobyteDB = new PDO("pgsql:dbname={$this->sessionDbInfo['dbn']};host={$this->sessionDbInfo['dbh']}", $this->sessionDbInfo['dbu'], $this->sessionDbInfo['dbp']);
+				}catch(PDOException $e){
+					$this->messageAddDebug('Failed to open database: '.$e);
+				}
+			}elseif($this->sessionDbInfo['dbt'] == 'Sequel Server'){
+				try{
+					//$sysinfo = posix_uname();
+					//$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
+					$this->phylobyteDB = new PDO("odbc:Driver={SQL Server};Server={$this->sessionDbInfo['dbh']};Database={$this->sessionDbInfo['dbn']}; Uid={$this->sessionDbInfo['dbu']};Pwd={$this->sessionDbInfo['dbp']};");
+				}catch(PDOException $e){
+					$this->messageAddDebug('Failed to open database: '.$e);
+				}
+			}
 			$GLOBALS['PHYLOBYTEDB'] = $this->phylobyteDB;
 		}catch(PDOException $e){
-			$this->messageAddDebug('Failed to open database: '.$e);
+			$this->messageAddDebug('Failed to connect to the database.');
 		}
 		try{
+		if($this->sessionDbInfo['dbt'] == 'Sequel Server'){
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_groups')
+			CREATE TABLE p_groups (
+				id INTEGER PRIMARY KEY IDENTITY,
+				name TEXT,
+				description TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_users')
+			CREATE TABLE p_users (
+				id INTEGER PRIMARY KEY IDENTITY,
+				username TEXT,
+				password TEXT,
+				passwordtype TEXT,
+				status TEXT,
+				statusvalue TEXT,
+				super TEXT,
+				email TEXT,
+				primarygroup TEXT,
+				passwordhash TEXT,
+				fname TEXT,
+				lname TEXT,
+				personalphone TEXT,
+				publicphone TEXT,
+				description TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_userinfo')
+			CREATE TABLE p_userinfo (
+				id INTEGER PRIMARY KEY IDENTITY,
+				uid TEXT,
+				fname TEXT,
+				mname TEXT,
+				lname TEXT,
+				nickname TEXT,
+				email TEXT,
+				personalnum TEXT,
+				publicnum TEXT,
+				description TEXT,
+				joindate TEXT,
+				lastused TEXT,
+				adminnote TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_memberships')
+			CREATE TABLE p_memberships (
+				id INTEGER PRIMARY KEY IDENTITY,
+				userid TEXT,
+				groupid TEXT,
+				lastused TEXT,
+				joined TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_plugins')
+			CREATE TABLE p_plugins (
+				id INTEGER PRIMARY KEY IDENTITY,
+				groupid TEXT,
+				pluginname TEXT
+			);");
+		}else{
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_groups(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -83,6 +182,7 @@ class phylobyte{
 					groupid TEXT,
 					pluginname TEXT
 				);");
+		}
 			$getRows = $this->phylobyteDB->prepare("SELECT COUNT(*) FROM p_groups");
 			$getRows->execute();
 			$numRows = $getRows->fetchAll();
@@ -90,12 +190,16 @@ class phylobyte{
 			if($this->phylobyteDB->exec("
 				INSERT INTO p_groups (name, description)
 				VALUES ('admin', 'Phylobyte default administrator group');") &&
-				$this->phylobyteDB->exec("INSERT INTO p_users (username, status, primarygroup, fname)
+				$this->phylobyteDB->exec("
+				INSERT INTO p_users (username, status, primarygroup, fname)
 				VALUES ('admin', 'override', '1', 'Administrator');")){
 					$this->messageAddDebug('Initialized Phylobyte User Tables');
 				}
 			}
-		}catch(PDOException $e){}
+		}catch(PDOException $e){
+			echo($e);
+		}
+		$this->pageTitle = 'Phylobyte CMS';
 		if($this->login()){
 			$this->pageBuild();
 			$this->navBuild();
@@ -111,19 +215,26 @@ class phylobyte{
 	function login(){
 		//do logout
 		if($_REQUEST['phylobyte'] == 'logout'){
-			unset($_SESSION['loginid']);
+			session_destroy();
+			session_start();
 			self::messageAddNotification('You are now logged out');
+		}else{
+			//do login
+			if(isset($_SESSION['loginid'])){
+				$userquery = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
+				$userquery->execute();
+				$queryResults = $userquery->fetchAll();
+				$this->sessionUserInfo = $queryResults[0];
+			}
 		}
-		//do login
-		if(isset($_SESSION['loginid'])){
-			$userquery = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
-			$userquery->execute();
-			$queryResults = $userquery->fetchAll();
-			$this->sessionUserInfo = $queryResults[0];
-		}
+
 		if(!isset($_SESSION['loginid']) || $this->sessionUserInfo['status'] == 'override'){
 			include('loginform.php');
-			if($accountverify == 'success') return true;
+			if($accountverify == 'success'){
+				return true;
+			}else{
+				return false;
+			}
 		}else{
 			//credentials OK for now
 			//query database and get user info. store to $sessionUserInfo

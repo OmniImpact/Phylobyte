@@ -4,6 +4,41 @@ $this->breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?phylobyte=settings">
 
 //process
 
+if($_POST['db_submit'] == 'Save Configuration'){
+
+	$dbt = stripslashes($_POST['p_dbt']);
+	$dbh = stripslashes($_POST['p_dbh']);
+	$dbn = stripslashes($_POST['p_dbn']);
+	$dbu = stripslashes($_POST['p_dbu']);
+	$dbp = stripslashes($_POST['p_dbp']);
+	//generate db connection string
+
+	$connectSuccess = false;
+	if($dbt == 'MySQL'){
+		try{
+			$testDB = new PDO('mysql:host='.$dbh.';dbname='.$dbn, $dbu, $dbp);
+			$this->messageAddNotification('Successfully connected to MySQL database. Saving configuration.');
+			file_put_contents('../data/dbconfig.array', serialize(Array('dbt' => $dbt, 'dbh' => $dbh, 'dbn' => $dbn, 'dbu' => $dbu, 'dbp' => $dbp)));
+			$this->messageAddAlert('You need to log out for changes to take effect.');
+		}catch(PDOException $e){
+			$this->messageAddDebug('Failed to open database: '.$e);
+		}
+	}elseif($dbt == 'Sequel Server'){
+	    try{
+			$sysinfo = posix_uname();
+			$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
+			$testDB =new PDO("odbc:Driver=$sequelServerDriver;Server=$dbh;Database=$dbn; Uid=$dbu;Pwd=$dbp;");
+			$this->messageAddNotification('Successfully connected to Sequel Server database. Saving configuration.');
+			file_put_contents('../data/dbconfig.array', serialize(Array('dbt' => $dbt, 'dbh' => $dbh, 'dbn' => $dbn, 'dbu' => $dbu, 'dbp' => $dbp)));
+			$this->messageAddAlert('You need to log out for changes to take effect.');
+		}catch(PDOException $e){
+			$this->messageAddDebug('Failed to open database: '.$e);
+		}
+	}else{
+		$this->messageAddError('Could not understand database type.');
+	}
+}
+
 //are we trying to toggle a page?
 if(isset($_GET['toggle'])){
 	if(is_dir('../plugins/'.stripslashes($_GET['toggle'])) ){
@@ -188,6 +223,30 @@ $this->pageArea.='
 	</table>
 	
 	</form>
+</fieldset>
+
+<fieldset>
+	<legend>Database Configuration</legend>
+	<form method="post" action="?'.$_SERVER['QUERY_STRING'].'">
+
+	<p>The database configuration will take effect when you log out.
+	Please note that if you change to a new database, you will be prompted to create a new admin user.</p>
+
+	<label for="p_dbt">Database Type</label>
+	<select name="p_dbt">
+		<option value="'.$this->sessionDbInfo['dbt'].'">Keep '.$this->sessionDbInfo['dbt'].'</option>
+		<option value="MySQL">MySQL</option>
+		<option value="Sequel Server">Sequel Server</option>
+	</select><br/>
+	<label for="p_dbh">Database Host</label><input type="text" name="p_dbh" value="'.$this->sessionDbInfo['dbh'].'"/><br/>
+	<label for="p_dbn">Database Name</label><input type="text" name="p_dbn" value="'.$this->sessionDbInfo['dbn'].'"/><br/>
+	<label for="p_dbu">User Name</label><input type="text" name="p_dbu" value="'.$this->sessionDbInfo['dbu'].'"/><br/>
+	<label for="p_dbp">Password</label><input type="password" name="p_dbp" value="'.$this->sessionDbInfo['dbp'].'"/><br/>
+
+		<input type="submit" name="db_submit" value="Save Configuration" style="width: 14em; margin-left: 70%;" />
+
+	</form>
+	
 </fieldset>
 
 ';

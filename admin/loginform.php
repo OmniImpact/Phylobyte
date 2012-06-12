@@ -1,5 +1,4 @@
 <?php
-$this->pageTitle.=' | Log In';
 
 //process
 if(isset($_POST['p_submit']) || $this->sessionUserInfo['status'] == 'override'){
@@ -59,6 +58,7 @@ if(isset($_POST['p_submit']) || $this->sessionUserInfo['status'] == 'override'){
 	}
 }
 //build
+$this->pageTitle.=' | Log In';
 
 $this->messageAddAlert('To use Phylobyte, you must log in.');
 

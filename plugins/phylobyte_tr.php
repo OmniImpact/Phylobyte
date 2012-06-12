@@ -5,12 +5,26 @@ class tinyRegistry{
 	private $dbObject;
 	
 	function __construct(){
-		try{
-			include('../data/database.vars.php');
-			$this->dbObject = new PDO('mysql:host=localhost;dbname='.$DBMASTERDB, $DBUSER, $DBPASSWORD);
-		}catch(PDOException $e){
-			echo("Caught Exception: $e");
+		if(count($_SESSION['dbinfo']) < 2){
+			if(is_file('../data/dbconfig.array')){
+				$_SESSION['dbinfo'] = unserialize(file_get_contents('../data/dbconfig.array'));
+			}else{
+				return false;
+			}
 		}
+		try{
+			if($_SESSION['dbinfo']['dbt'] == 'MySQL'){
+				try{
+					$this->dbObject = new PDO('mysql:host='.$_SESSION['dbinfo']['dbh'].';dbname='.$_SESSION['dbinfo']['dbn'], $_SESSION['dbinfo']['dbu'], $_SESSION['dbinfo']['dbp']);
+				}catch(PDOException $e){echo $e;}
+			}elseif($_SESSION['dbinfo']['dbt'] == 'Sequel Server'){
+				try{
+					//$sysinfo = posix_uname();
+					//$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
+					$this->dbObject = new PDO("odbc:Driver={SQL Server};Server={$_SESSION['dbinfo']['dbh']};Database={$_SESSION['dbinfo']['dbn']}; Uid={$_SESSION['dbinfo']['dbu']};Pwd={$_SESSION['dbinfo']['dbp']};");
+				}catch(PDOException $e){echo $e;}
+			}
+		}catch(PDOException $e){echo $e;}
 	}
 
 	/**
@@ -19,9 +33,22 @@ class tinyRegistry{
 	 * @return boolean
 	 **/
 	function open($registry){
+		if($this->dbObject == null){
+			return false;
+		}
 		$this->registry = $registry;
 		try{
+			if($_SESSION['dbinfo']['dbt'] == 'Sequel Server'){
+				$this->dbObject->exec("
+				IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='__REGISTRY__{$this->registry}')
+				CREATE TABLE __REGISTRY__{$this->registry} (
+					id INTEGER PRIMARY KEY IDENTITY,
+					mykey TEXT,
+					value TEXT
+				);");
+			}else{
 			$this->dbObject->exec("CREATE TABLE IF NOT EXISTS __REGISTRY__{$this->registry}(id INTEGER PRIMARY KEY AUTO_INCREMENT, mykey TEXT, value TEXT);");
+			}
 			return true;
 		}catch(PDOException $e){
 			echo("Caught Exception: $e");
@@ -34,7 +61,12 @@ class tinyRegistry{
 	 * @return array
 	 **/
 	function registrylist(){
-		$list = $this->dbObject->prepare("SHOW TABLES LIKE '__REGISTRY__%';"); //" WHERE name LIKE '__REGISTRY__%' ORDER BY name;");
+		if($_SESSION['dbinfo']['dbt'] == 'Sequel Server'){
+			$list = $this->dbObject->prepare("SELECT * FROM sys.Tables WHERE name LIKE '__REGISTRY__%';"); //" WHERE name LIKE '__REGISTRY__%' ORDER BY name;");
+		}else{
+			$list = $this->dbObject->prepare("SHOW TABLES LIKE '__REGISTRY__%';"); //" WHERE name LIKE '__REGISTRY__%' ORDER BY name;");
+		}
+		
 		$list->execute();
 		$currentResults = $list->fetchAll();
 		$results = null;
@@ -62,6 +94,9 @@ class tinyRegistry{
 	 * @return boolean
 	 **/
 	function push($key, $value, $overwrite = true){
+		if($this->dbObject == null){
+			return false;
+		}
 		$key = $this->dbObject->quote($key);
 		$value = $this->dbObject->quote($value);
 		if($this->registry == null) return false;

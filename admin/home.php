@@ -5,11 +5,11 @@ $this->pageTitle.=' | Home';
 
 $this->pageArea = '
 <h3 style="float: left;">
-<img src="gfx/logo_color_md.png" /><br/>
+<img src="gfx/logo_color_md.png" style="max-width: 100%;"/><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Phylobyte Version 0.5 (Beta)</h3>
 
-<div style="float: right; width: 30%; text-align: center;">
+<div style="float: right; width: 30%; text-align: center; min-width: 20em;">
 	<h2>Love your website.<br/>
 	Make it grow.<br/>
 	Choose a plugin<br/>
@@ -33,7 +33,9 @@ foreach($pluginDirArray as $possiblePlugin) {
 		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$this->pageArea.='
-			<a href="?plugin='.substr($pluginDir, 0, -3).'" class="headertext" style="position: relative; padding: .5em; color: white; font-size: 14pt; text-shadow: 1px 1px 2pt black; margin: .5em;">'.$pluginName.'</a>';
+			<a href="?plugin='.substr($pluginDir, 0, -3).'" class="headertext"
+			style="position: relative; padding: .5em; color: white; font-size: 14pt;
+			text-shadow: 1px 1px 2pt black; margin: .5em;">'.$pluginName.'</a>';
 		}
 	}
 }

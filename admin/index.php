@@ -34,7 +34,7 @@ $PHYLOBYTE->build_finish();
 
 <div class="header">
 <div class="top">
-	<a href="?"><img src="gfx/logo_white_mono.png"/></a>
+	<a href="?"><img src="gfx/logo_white_mono.png" style="max-width: 40%;"/></a>
 <div class="headertext" <?php $MS->mobileEcho('style="top: 6px;"');?>>
 <?php
 $MS->mobileEcho(

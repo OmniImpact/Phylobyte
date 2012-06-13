@@ -50,6 +50,15 @@ class ugp{
 
 
 	function  user_put($userArray){
+		//phylobyte::messageAddDebug(print_r($userArray, true).' '.$this->group_format($this->group_get('1'), '%m%'));
+		//first of all, if you are trying to modify the last admin,
+		//something is WRONG because that is YOU, and this is impossible
+		if($userArray['primarygroup'] != '1' && $this->group_format($this->group_get('1'), '%m%') == '1'){
+			phylobyte::messageAddError('You can not change the group of the last admin.');
+			return false;
+		}
+		
+		
 		//must have a unique user name
 		//check valid email
 		//generate password if requested
@@ -75,8 +84,12 @@ class ugp{
 
 	function user_delete($userID){
 		//check deleteable
-		
-		return true;
+		if($this->user_deleteable($userID)){
+			$this->pDB->exec("DELETE FROM p_users WHERE id={$_POST['u_uid']};");
+			phylobyte::messageAddNotification('Successfully deleted user.');
+			return true;
+		}
+		return false;
 	}
 
 	function group_deleteable($groupID){
@@ -97,8 +110,22 @@ class ugp{
 	}
 	
 	function user_deleteable($userID){
-		//can't delete last admin or self
-		return true;
+
+		$result = true;
+		//first, you can't delete yourself
+
+		if($_SESSION['loginid'] == $userID){
+			phylobyte::messageAddError('You can not delete yourself.');
+			$result = false;
+		}
+		//next, you can't delete the last admin (this also ensures there is at least one user left)
+		$tryDeleteUser = $this->user_get($userID);
+		if($tryDeleteUser[0]['primarygroup'] == '1' && $this->group_format($this->group_get($userArray['primarygroup']), '%m%') == '1'){
+			phylobyte::messageAddError('You can not delete the last administrator.');
+			$result = false;
+		}
+		
+		return $result;
 	}
 
 	function group_get($groupID, $groupsFilter = ''){

@@ -32,12 +32,15 @@ if($_POST['u_submit'] == 'Edit User' && trim(stripslashes($_POST['u_uid'])) == n
 }
 
 if($_POST['u_submit'] == 'Delete User'){
-		$this->messageAddAlert('Try To delete user...');
+	$GLOBALS['UGP']->user_delete($_POST['u_uid']);
 }
 
 //do the rest of the checks for a new user. if it is all good, add the user, issue a success message, and clear 'Add User'
 if($_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Create User Account'){
-	$this->messageAddAlert('Updating User Information');
+	$GLOBALS['UGP']->user_put(Array(
+		'id' => stripslashes($_POST['u_uid']),
+		'primarygroup' => stripslashes($_POST['u_primarygroup'])
+	));
 }
 
 //a little javascript
@@ -100,6 +103,7 @@ $this->pageArea.= '
 	<legend>Add New User</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 	<input type="hidden" name="u_initialusername" value="'.$_POST['u_name'].'" />
+	<input type="hidden" name="u_uid" value="" />
 	<label for="u_name">User Name</label><input type="text" name="u_name" value="'.$_POST['u_name'].'"/><br/>
 	<label for="u_fname">First Name</label><input type="text" name="u_fname" value="'.$_POST['u_fname'].'"/><br/>
 	<label for="u_lname">Last Name</label><input type="text" name="u_lname" value="'.$_POST['u_lname'].'"/><br/>

@@ -137,8 +137,12 @@ $this->pageArea.= '
 
 $this->breadcrumbs.=' &raquo; Edit User';
 
-	$userExists = $GLOBALS['UGP']->user_get(stripslashes($_POST['u_uid']));
-	
+if($_POST['u_uid'] == $_SESSION['loginid']){
+	$this->messageAddAlert('You are discouraged from editing your own account from this plugin.<br/>
+	If you wish to change your account settings, please use the "<a href="?phylobyte=account">My Account</a>" link. ');
+}
+
+$userExists = $GLOBALS['UGP']->user_get(stripslashes($_POST['u_uid']));
 
 //list of statuses
 switch($userExists['status']){

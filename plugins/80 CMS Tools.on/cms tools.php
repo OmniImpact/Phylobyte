@@ -50,21 +50,99 @@ class ugp{
 
 
 	function  user_put($userArray){
-		//phylobyte::messageAddDebug(print_r($userArray, true).' '.$this->group_format($this->group_get('1'), '%m%'));
-		//first of all, if you are trying to modify the last admin,
+
+		//if no user id is supplied, we have a certain set of requirements
+		//a user name has to be provided, and either a password or autopass
+		function genRandomString($source, $length) {
+			$string = '';
+			for ($p = 0; $p < $length; $p++) {
+				$string .= $source[mt_rand(0, strlen($source))];
+			}
+			return $string;
+		}
+		
+		if($userArray['autopass'] == true){
+			$userArray['password'] = genRandomString('aaabcdeeefgghhiiijkllmnnooopqrrssttuuuvwxyyz', 6).genRandomString('0123456789', 3);
+			phylobyte::messageAddAlert('Generated password: '.$userArray['password']);
+		}
+		
+		if($userArray['id'] == null){
+			if($userArray['name'] == null || strlen($userArray['password']) < 4){
+				phylobyte::messageAddError('You need to provide at least a user name and password to create a new user.');
+				return false;
+			}
+		}
+
+		//now, regardless of whether a user id is supplied, we need to make sure
+		//the user name is available
+		$userNameArray = $this->user_get($userArray['name']);
+		if($userNameArray[0]['id'] != $userArray['id'] && $userNameArray[0] != null){
+			phylobyte::messageAddError('A user with that name already exists.');
+			return false;
+		}
+
+		//fail if invalid email
+		include_once('../plugins/EmailAddressValidator.php');
+		$validator = new EmailAddressValidator;
+		if (!$validator->check_email_address($userArray['email']) && $userArray['email'] != null) {
+			phylobyte::messageAddError('That is not a valid email address.');
+			return false;
+		}
+
+		//and just in case, we make sure that it's not the last admin
 		//something is WRONG because that is YOU, and this is impossible
-		if($userArray['primarygroup'] != '1' && $this->group_format($this->group_get('1'), '%m%') == '1'){
+		if($userArray['id'] != null && $userArray['primarygroup'] != '1' && $this->group_format($this->group_get('1'), '%m%') == '1'){
 			phylobyte::messageAddError('You can not change the group of the last admin.');
 			return false;
 		}
+
+		//write changes to database, keepind in mind:
+		//if the password is null, don't touch it
+		//if the user ID is null, don't privide it
+		//id, description, passwordhash are optional
+		$passwordhash = null;
+		if ($userArray['password'] != null) {
+		    $passwordhash = sha1($userArray['password']);
+		}
 		
 		
-		//must have a unique user name
-		//check valid email
-		//generate password if requested
-		//dont change group if last admin or self
+		if($userArray['id'] != null){
+			$optionalKeys.= 'id, ';
+			$optionalVals.= $this->pDB->quote($userArray['id']).', ';
+		}
+		if($userArray['description'] != null){
+			$optionalKeys.= 'description, ';
+			$optionalVals.= $this->pDB->quote($userArray['description']).', ';
+		}
+		if($passwordhash != null){
+			$optionalKeys.= 'passwordhash, ';
+			$optionalVals.= $this->pDB->quote($passwordhash).', ';
+		}
+
+		if($userArray['status'] == null || $userArray['primarygroup'] == null){
+			phylobyte::messageAddError('You must supply a status and primary group.');
+			return false;
+		}
+
+		$name = $this->pDB->quote($userArray['name']);
+		$status = $this->pDB->quote($userArray['status']);
+		$primarygroup = $this->pDB->quote($userArray['primarygroup']);
+		$email = $this->pDB->quote($userArray['email']);
+		$fname = $this->pDB->quote($userArray['fname']);
+		$lname = $this->pDB->quote($userArray['lname']);
+		$personalphone = $this->pDB->quote($userArray['personalphone']);
+		$publicphone = $this->pDB->quote($userArray['publicphone']);
 		
-		return  true;
+		$query = $this->pDB->prepare("
+			REPLACE INTO p_users ($optionalKeys username, status, primarygroup, email, fname, lname, personalphone, publicphone)
+			VALUES ($optionalVals $name, $status, $primarygroup, $email, $fname, $lname, $personalphone, $publicphone); ");
+		if($query->execute()){
+			phylobyte::messageAddNotification('Successfully updated users.');
+			return true;
+		}else{
+			phylobyte::messageAddError('Error updating users.');
+			return false;
+		}
 	}
 
 	function group_delete($groupID){
@@ -159,16 +237,29 @@ class ugp{
 	function user_get($userID, $filter = '', $limit = 100, $orderBy = 'username'){
 		//return array or multiple arrays
 
-		//if gruoupID, return array, otherwise return multiple array
+		//if userID, return array, otherwise return multiple array
 		if($userID != null){
-			$user = $this->pDB->prepare("
-				SELECT *
-				FROM p_users WHERE id=$userID
-				ORDER BY $orderBy
-				LIMIT $limit;");
-			$user->execute();
-			$user = $user->fetchAll();
-			return $user;
+			if(ctype_digit($userID)){
+				$user = $this->pDB->prepare("
+					SELECT *
+					FROM p_users WHERE id=$userID
+					ORDER BY $orderBy
+					LIMIT $limit;");
+				$user->execute();
+				$user = $user->fetchAll();
+				return $user;
+			}else{
+				//we're looking for a user by name
+				$userID = $this->pDB->quote($userID);
+				$user = $this->pDB->prepare("
+					SELECT *
+					FROM p_users WHERE username=$userID
+					ORDER BY $orderBy
+					LIMIT $limit;");
+				$user->execute();
+				$user = $user->fetchAll();
+				return $user;
+			}
 		}else{
 			$users = $this->pDB->prepare("
 				SELECT *

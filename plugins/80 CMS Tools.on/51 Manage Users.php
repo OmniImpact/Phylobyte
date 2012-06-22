@@ -19,13 +19,8 @@ if(isset($_POST['u_filter'])){
 	$_SESSION['user_list_filter'] = stripslashes($_POST['u_filter']);
 }
 
-//check that a user name is provided if trying to add a user.
-if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) == null ){
-	$this->messageAddAlert('You must provide a user name to add a new user.');
-	$_POST['u_submit'] = null;
-}
 
-//check that a user name is provided if trying to add a user.
+//check that a user name is provided if trying to edit a user.
 if($_POST['u_submit'] == 'Edit User' && trim(stripslashes($_POST['u_uid'])) == null ){
 	$this->messageAddAlert('You must select a user to edit.');
 	$_POST['u_submit'] = null;
@@ -37,10 +32,35 @@ if($_POST['u_submit'] == 'Delete User'){
 
 //do the rest of the checks for a new user. if it is all good, add the user, issue a success message, and clear 'Add User'
 if($_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Create User Account'){
-	$GLOBALS['UGP']->user_put(Array(
+	//i do need to preprocess the password
+	//null is no change
+
+	if($_POST['u_autopass'] == 'on'){
+		$autopass = true;
+		$password = null;
+	}elseif($_POST['u_pass1'] == $_POST['u_pass2'] && strlen($_POST['u_pass1']) >= 4){
+		$password = stripslashes($_POST['u_pass1']);
+	}else{
+		$password = null;
+	}
+
+	if($GLOBALS['UGP']->user_put(Array(
 		'id' => stripslashes($_POST['u_uid']),
-		'primarygroup' => stripslashes($_POST['u_primarygroup'])
-	));
+		'name' => stripslashes($_POST['u_name']),
+		'fname' => stripslashes($_POST['u_fname']),
+		'lname' => stripslashes($_POST['u_lname']),
+		'email' => stripslashes($_POST['u_email']),
+		'personalphone' => stripslashes($_POST['u_personalp']),
+		'publicphone' => stripslashes($_POST['u_publicp']),
+		'primarygroup' => stripslashes($_POST['u_primarygroup']),
+		'description' => stripslashes($_POST['u_description']),
+		'status' => stripslashes($_POST['u_status']),
+		'autopass' => $autopass,
+		'password' => $password
+	))){
+		$_POST['u_submit'] = null;
+	};
+	
 }
 
 //a little javascript
@@ -70,7 +90,7 @@ $this->pageArea.= '
 ';
 
 //if new user, edit user, or viewing
-if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) != null){
+if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) != null || $_POST['u_submit'] == 'Create User Account'){
 	$this->breadcrumbs.=' &raquo; Add New User';
 
 	//help

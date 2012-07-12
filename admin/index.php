@@ -27,8 +27,13 @@ $PHYLOBYTE->build_finish();
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
 		<meta name="author" content="Daniel Stephen Marcus" /> 
 		<meta name="keywords" content="Omni Impact Small Business Services, graphics, design, websites" /> 
-		<meta name="description" content="Omni Impact provides high quality and cost effective services for small and upstart businesses including website and graphics design, consultation, branding, and more." /> 
-		<script src="../plugins/mootools-core-1.4.0-full-nocompat.js" type="text/javascript"></script>
+		<meta name="description" content="Omni Impact provides high quality and cost effective services for small and upstart businesses including website and graphics design, consultation, branding, and more." />
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+		<script type="text/javascript">
+		jQuery.noConflict();
+		</script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js"></script>
 	</head> 
 <body>
 
@@ -58,30 +63,31 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 	&nbsp; Message Pile &nbsp;
 	</div>
 	<script type="text/javascript">
-	window.addEvent('domready', function() {
-		var originalheight = document.getElementById('messagebox').offsetHeight;
-		$('messageboxtab').addEvent('click', function(){
-			if(document.getElementById('messagebox').offsetHeight > 6){
-				$('messagebox').morph({
-				'height': '0',
-				'padding-bottom': '0'
-				});
-			}else{
-				$('messagebox').morph({
-				'height': originalheight
-				});
-			}
-		});
-		if(originalheight >= 10){
-			$('messagebox').set('styles', {
-			'padding-bottom': '5pt'
+	$('messagebox').set('styles', {
+	'padding-bottom': '3pt'
+	});
+	originalheight = document.getElementById('messagebox').offsetHeight;
+	$('messagebox').set('styles', {
+		'height': '0',
+		'padding-bottom': '0'
+	});
+	$('messagebox').morph({
+		'height': originalheight,
+		'padding-bottom': '0'
+	});
+	setTimeout('$(\'messagebox\').morph({\'height\': \'0\',\'padding-bottom\': \'0\'});',3000);
+	$('messageboxtab').addEvent('click', function(){
+		if(document.getElementById('messagebox').offsetHeight > 6){
+			$('messagebox').morph({
+			'height': '0',
+			'padding-bottom': '0'
 			});
-			originalheight = document.getElementById('messagebox').offsetHeight;
-			setTimeout('$(\'messagebox\').morph({\'height\': \'0\',\'padding-bottom\': \'0\'});',3000);
 		}else{
-			originalheight = 0;
+			$('messagebox').morph({
+			'height': originalheight,
+			'padding-bottom': '0'
+			});
 		}
-		
 	});
 	</script>
 	<?php } ?>

@@ -86,8 +86,6 @@ $this->pageArea = '
 	<select name="p_dbt">
 		<option value="'.$_POST['p_dbt'].'">Keep '.$_POST['p_dbt'].'</option>
 		<option value="MySQL">MySQL</option>
-		<option value="PostgreSQL">PostgreSQL</option>
-		<option value="Sequel Server">Sequel Server</option>
 	</select><br/>
 	<label for="p_dbh">Database Host</label><input type="text" name="p_dbh" value="'.$_POST['p_dbh'].'"/><br/>
 	<label for="p_dbn">Database Name</label><input type="text" name="p_dbn" value="'.$_POST['p_dbn'].'"/><br/>

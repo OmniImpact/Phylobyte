@@ -236,7 +236,6 @@ $this->pageArea.='
 	<select name="p_dbt">
 		<option value="'.$this->sessionDbInfo['dbt'].'">Keep '.$this->sessionDbInfo['dbt'].'</option>
 		<option value="MySQL">MySQL</option>
-		<option value="Sequel Server">Sequel Server</option>
 	</select><br/>
 	<label for="p_dbh">Database Host</label><input type="text" name="p_dbh" value="'.$this->sessionDbInfo['dbh'].'"/><br/>
 	<label for="p_dbn">Database Name</label><input type="text" name="p_dbn" value="'.$this->sessionDbInfo['dbn'].'"/><br/>

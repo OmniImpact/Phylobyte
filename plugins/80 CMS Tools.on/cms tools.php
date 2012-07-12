@@ -231,8 +231,8 @@ class ugp{
 
 	/**
 	 * Retrieve a group and its information from the database.
-	 * @param String groupID (may also be null to trigger the result as an Array)
-	 * @return String or Array
+	 * @param String groupID pass null and a filter to search groups
+	 * @return Array
 	 **/
 	function group_get($groupID, $groupsFilter = ''){
 		//if gruoupID, return array, otherwise return multiple array
@@ -262,6 +262,11 @@ class ugp{
 		}
 	}
 
+	/**
+	 * Retrieve a user and its information from the database.
+	 * @param String userID otherwise pass null and a filter to search users
+	 * @return Array
+	 **/
 	function user_get($userID, $filter = '', $limit = 100, $orderBy = 'username'){
 		//return array or multiple arrays
 
@@ -304,6 +309,16 @@ class ugp{
 
 	}
 
+	/**
+	 * Format an array of group information, use with group_get
+	 * @param Array groupArray use with group_get to ensure proper format
+	 * @param String formatString string with formatting markers to replace with the group information
+	 * %i% = id
+	 * %n% = name
+	 * %d% = description
+	 * %m% = members
+	 * @return String
+	 **/
 	function group_format($groupsArray, $formatString){
 		//take in an array of groups, format based on the string
 		// %i% = id
@@ -332,6 +347,15 @@ class ugp{
 		return $result;
 	}
 
+	/**
+	 * Format an array of user information, use with user_get
+	 * @param Array usersArray use with user_get to ensure proper format
+	 * @param String formatString string with formatting markers to replace with the group information
+	 * %i% = id
+	 * %u% = username
+	 * @param groupFormatString
+	 * @return String
+	 **/
 	function user_format($usersArray, $formatString = '%i%, %u% <br/>', $groupFormatString = '%n%'){
 		//take in an array of groups, format based on the string
 		// %i% = id

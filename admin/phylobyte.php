@@ -67,65 +67,7 @@ class phylobyte{
 		}
 		try{
 		if($this->sessionDbInfo['dbt'] == 'Sequel Server'){
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_groups')
-			CREATE TABLE p_groups (
-				id INTEGER PRIMARY KEY IDENTITY,
-				name TEXT,
-				description TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_users')
-			CREATE TABLE p_users (
-				id INTEGER PRIMARY KEY IDENTITY,
-				username TEXT,
-				password TEXT,
-				passwordtype TEXT,
-				status TEXT,
-				statusvalue TEXT,
-				super TEXT,
-				email TEXT,
-				primarygroup TEXT,
-				passwordhash TEXT,
-				fname TEXT,
-				lname TEXT,
-				personalphone TEXT,
-				publicphone TEXT,
-				description TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_userinfo')
-			CREATE TABLE p_userinfo (
-				id INTEGER PRIMARY KEY IDENTITY,
-				uid TEXT,
-				fname TEXT,
-				mname TEXT,
-				lname TEXT,
-				nickname TEXT,
-				email TEXT,
-				personalnum TEXT,
-				publicnum TEXT,
-				description TEXT,
-				joindate TEXT,
-				lastused TEXT,
-				adminnote TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_memberships')
-			CREATE TABLE p_memberships (
-				id INTEGER PRIMARY KEY IDENTITY,
-				userid TEXT,
-				groupid TEXT,
-				lastused TEXT,
-				joined TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_plugins')
-			CREATE TABLE p_plugins (
-				id INTEGER PRIMARY KEY IDENTITY,
-				groupid TEXT,
-				pluginname TEXT
-			);");
+			//stub
 		}else{
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_groups(
@@ -153,20 +95,18 @@ class phylobyte{
 				);");
 				//soon i will delete everything after statusvalue
 			$this->phylobyteDB->exec("
-				CREATE TABLE IF NOT EXISTS p_userinfo(
+				CREATE TABLE IF NOT EXISTS p_gattributes(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					gid TEXT,
+					attribute TEXT,
+					defaultvalue TEXT
+				);");
+			$this->phylobyteDB->exec("
+				CREATE TABLE IF NOT EXISTS p_uattributes(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
 					uid TEXT,
-					fname TEXT,
-					mname TEXT,
-					lname TEXT,
-					nickname TEXT,
-					email TEXT,
-					personalnum TEXT,
-					publicnum TEXT,
-					description TEXT,
-					joindate TEXT,
-					lastused TEXT,
-					adminnote TEXT
+					aid TEXT,
+					value TEXT
 				);");
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_memberships(

@@ -91,7 +91,9 @@ class phylobyte{
 				lname TEXT,
 				personalphone TEXT,
 				publicphone TEXT,
-				description TEXT
+				description TEXT,
+				registered TEXT,
+				lastlogin TEXT
 			);");
 			$this->phylobyteDB->exec("
 			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_userinfo')

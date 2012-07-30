@@ -1,7 +1,11 @@
 *{
 	margin: 0;
 	padding: 0;
-} 
+}
+
+input:focus{
+	outline: none;
+}
 
 body{
 	background-color: white;
@@ -85,11 +89,9 @@ tt{
 
 strong{
 	font-weight: bold;
-	text-decoration: underline;
 }
 
 em{
-	font-weight: bold;
 	font-style: oblique;
 }
 

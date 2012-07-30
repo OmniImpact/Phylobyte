@@ -138,7 +138,11 @@ class tinyRegistry{
 		}elseif($result === false){
 			if(ctype_digit($id)){
 				$statement = $this->dbObject->prepare("DELETE FROM __REGISTRY__{$this->registry} WHERE id=$id;");
-				$statement->execute(); return true;
+				if($statement->execute()){
+					return true;
+				}else{
+					return false;
+				}
 			}
 		}else{
 			$returnString = null;

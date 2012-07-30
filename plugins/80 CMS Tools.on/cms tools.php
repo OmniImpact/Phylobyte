@@ -155,7 +155,7 @@ class ugp{
 				WHERE id=$groupID;")
 			){ phylobyte::messageAddNotification('Successfully deleted group.'); }
 		}else{
-			phylobyte::messageAddError('The group could not be deleted: '.$delete);
+			phylobyte::messageAddError('The group '.$groupID.' could not be deleted: '.$delete);
 		}
 
 	}
@@ -175,11 +175,11 @@ class ugp{
 		//otherwise, return the error
 
 		$group = $this->group_get($groupID);
-		if($group['id'] == 1){
+		if($group[0]['id'] == 1){
 			return 'You can not delete the Admin group.';
-		}elseif($group['members'] != 0){
+		}elseif($group[0]['members'] != 0){
 			return 'You can not delete a group that still has members.';
-		}elseif($group['id'] == ''){
+		}elseif($group[0]['id'] == ''){
 			return 'The group you are trying to delete does not exist.';
 		}else{
 			return true;

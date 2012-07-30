@@ -4,10 +4,18 @@ class ugp{
 
 	static $pDB;
 
+	/**
+	 * Constructor for phylobyte Users and Groups class.
+	 **/
 	function __construct(){
 		$this->pDB = $GLOBALS['PHYLOBYTEDB'];
 	}
 
+	/**
+	 * Add or update a group. if an ID is provided and the group exists it will be updated.
+	 * @param Array groupArray with id, name, description
+	 * @return boolean
+	 **/
 	function group_put($groupArray){
 		//take in a group array, write it to the database
 		//use replace, so it will overwrite if an ID is provided
@@ -32,7 +40,7 @@ class ugp{
 			phylobyte::messageAddAlert('A group with that name already exists.');
 			return false;
 		}
-		
+
 		$description = $this->pDB->quote($groupArray['description']);
 		$optional = ($groupArray['id'] != '' ? 'id,' : '');
 		$id = ($groupArray['id'] != '' ? $this->pDB->quote($groupArray['id']).',' : '');
@@ -48,7 +56,11 @@ class ugp{
 		}
 	}
 
-
+	/**
+	 * Add or update a user. if an ID is provided and the user exists it will be updated.
+	 * @param Array userArray with attributes
+	 * @return boolean
+	 **/
 	function  user_put($userArray){
 
 		//if no user id is supplied, we have a certain set of requirements
@@ -60,12 +72,12 @@ class ugp{
 			}
 			return $string;
 		}
-		
+
 		if($userArray['autopass'] == true){
 			$userArray['password'] = genRandomString('aaabcdeeefgghhiiijkllmnnooopqrrssttuuuvwxyyz', 6).genRandomString('0123456789', 3);
 			phylobyte::messageAddAlert('Generated password: '.$userArray['password']);
 		}
-		
+
 		if($userArray['id'] == null){
 			if($userArray['name'] == null || strlen($userArray['password']) < 4){
 				phylobyte::messageAddError('You need to provide at least a user name and password to create a new user.');
@@ -104,8 +116,8 @@ class ugp{
 		if ($userArray['password'] != null) {
 		    $passwordhash = sha1($userArray['password']);
 		}
-		
-		
+
+
 		if($userArray['id'] != null){
 			$optionalKeys.= 'id, ';
 			$optionalVals.= $this->pDB->quote($userArray['id']).', ';
@@ -132,7 +144,7 @@ class ugp{
 		$lname = $this->pDB->quote($userArray['lname']);
 		$personalphone = $this->pDB->quote($userArray['personalphone']);
 		$publicphone = $this->pDB->quote($userArray['publicphone']);
-		
+
 		$query = $this->pDB->prepare("
 			REPLACE INTO p_users ($optionalKeys username, status, primarygroup, email, fname, lname, personalphone, publicphone)
 			VALUES ($optionalVals $name, $status, $primarygroup, $email, $fname, $lname, $personalphone, $publicphone); ");
@@ -145,6 +157,12 @@ class ugp{
 		}
 	}
 
+
+	/**
+	 * Delete a group.
+	 * @param int groupID
+	 * @return boolean
+	 **/
 	function group_delete($groupID){
 
 		$delete = $this->group_deleteable($groupID);
@@ -160,6 +178,11 @@ class ugp{
 
 	}
 
+	/**
+	 * Add or delete a user by ID.
+	 * @param Int userID
+	 * @return boolean
+	 **/
 	function user_delete($userID){
 		//check deleteable
 		if($this->user_deleteable($userID)){
@@ -184,9 +207,9 @@ class ugp{
 		}else{
 			return true;
 		}
-		
+
 	}
-	
+
 	function user_deleteable($userID){
 
 		$result = true;
@@ -202,10 +225,15 @@ class ugp{
 			phylobyte::messageAddError('You can not delete the last administrator.');
 			$result = false;
 		}
-		
+
 		return $result;
 	}
 
+	/**
+	 * Retrieve a group and its information from the database.
+	 * @param String groupID pass null and a filter to search groups
+	 * @return Array
+	 **/
 	function group_get($groupID, $groupsFilter = ''){
 		//if gruoupID, return array, otherwise return multiple array
 		if($groupID != null){
@@ -234,6 +262,11 @@ class ugp{
 		}
 	}
 
+	/**
+	 * Retrieve a user and its information from the database.
+	 * @param String userID otherwise pass null and a filter to search users
+	 * @return Array
+	 **/
 	function user_get($userID, $filter = '', $limit = 100, $orderBy = 'username'){
 		//return array or multiple arrays
 
@@ -273,9 +306,19 @@ class ugp{
 			$users = $users->fetchAll();
 			return $users;
 		}
-		
+
 	}
 
+	/**
+	 * Format an array of group information, use with group_get
+	 * @param Array groupArray use with group_get to ensure proper format
+	 * @param String formatString string with formatting markers to replace with the group information
+	 * %i% = id
+	 * %n% = name
+	 * %d% = description
+	 * %m% = members
+	 * @return String
+	 **/
 	function group_format($groupsArray, $formatString){
 		//take in an array of groups, format based on the string
 		// %i% = id
@@ -284,7 +327,7 @@ class ugp{
 		// %m% = members
 
 		$result = null;
-		
+
 		foreach($groupsArray as $group) {
 		    $needles = array(
 				'%i%',
@@ -300,10 +343,19 @@ class ugp{
 		    );
 		    $result.=str_replace($needles, $replacements, $formatString);
 		}
-		
+
 		return $result;
 	}
 
+	/**
+	 * Format an array of user information, use with user_get
+	 * @param Array usersArray use with user_get to ensure proper format
+	 * @param String formatString string with formatting markers to replace with the group information
+	 * %i% = id
+	 * %u% = username
+	 * @param groupFormatString
+	 * @return String
+	 **/
 	function user_format($usersArray, $formatString = '%i%, %u% <br/>', $groupFormatString = '%n%'){
 		//take in an array of groups, format based on the string
 		// %i% = id
@@ -343,7 +395,7 @@ class ugp{
 						$userArray['status'] = ucfirst($userArray['status']);
 					}
 			}
-		
+
 		    $needles = array(
 				'%i%',
 				'%u%',
@@ -372,7 +424,7 @@ class ugp{
 				$this->group_format($this->group_get($userArray['primarygroup']), '%n%'),
 				$color
 		    );
-		    
+
 		    $result.=str_replace($needles, $replacements, $formatString);
 		}
 
@@ -384,4 +436,4 @@ class ugp{
 
 $GLOBALS['UGP'] = new ugp;
 
-?> 
+?>

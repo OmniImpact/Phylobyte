@@ -155,20 +155,18 @@ class phylobyte{
 				);");
 				//soon i will delete everything after statusvalue
 			$this->phylobyteDB->exec("
-				CREATE TABLE IF NOT EXISTS p_userinfo(
+				CREATE TABLE IF NOT EXISTS p_gattributes(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					gid TEXT,
+					attribute TEXT,
+					defaultvalue TEXT
+				);");
+			$this->phylobyteDB->exec("
+				CREATE TABLE IF NOT EXISTS p_uattributes(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
 					uid TEXT,
-					fname TEXT,
-					mname TEXT,
-					lname TEXT,
-					nickname TEXT,
-					email TEXT,
-					personalnum TEXT,
-					publicnum TEXT,
-					description TEXT,
-					joindate TEXT,
-					lastused TEXT,
-					adminnote TEXT
+					aid TEXT,
+					value TEXT
 				);");
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_memberships(

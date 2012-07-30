@@ -1,1 +1,0 @@
-Create and manage cases with this mastery learning tool.

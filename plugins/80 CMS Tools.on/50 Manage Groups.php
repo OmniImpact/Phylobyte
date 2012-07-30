@@ -16,7 +16,7 @@ if($_POST['g_submit'] == 'Delete Group'){
 $this->pageArea.= '
 <script type="text/javascript">
 	var lastChangedName = null;
-	
+
 	function changeClass(targetID, classA, classB){
 		var node = document.getElementById(targetID);
 		lastChangedName = targetID;
@@ -43,7 +43,7 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	$this->breadcrumbs.=' &raquo; Edit Group';
 
 	$group = $GLOBALS['UGP']->group_get($_POST['g_groupid']);
-	
+
 	$groupEditTemplate='
 	<fieldset>
 		<legend>Update Group Information</legend>
@@ -55,8 +55,30 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 		<label for="g_cancel">&nbsp;</label><input type="submit" name="g_cancel" value="Cancel Editing" />
 	</form>
 	</fieldset>
+
+	<fieldset>
+		<legend>Group Attributes</legend>
+	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+
+		<label for="u_filter">Attribute Name</label><input type="text" name="u_filter" value="'.$_SESSION['user_list_filter'].'"/><br/>
+		<label for="u_limit">Default Value</label><input type="text" name="u_limit" value=""/><br/>
+		<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Attribute" />
+
+		<table class="selTable">
+			<tr>
+				<th style="width: 6em;">Select</th><th>Attribute Name</th><th>Default Value</th>
+			</tr>
+		</table>
+
+		<div style="display: block; text-align: right;">
+			<input type="submit" name="u_submit" value="Delete Attribute"  style="width: 14em;" />
+		</div>
+
+	</form>
+	</fieldset>
+
 	';
-	
+
 	$this->pageArea.=$GLOBALS['UGP']->group_format($group, $groupEditTemplate);
 
 	$this->docArea='
@@ -91,7 +113,7 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	$this->pageArea.= '
 
 	<fieldset>
-		<legend>Add New Primary Group</legend>
+		<legend>Add New Group</legend>
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 		<label for="g_name">Group Name</label><input type="text" name="g_name" value=""/><br/>
 		<label for="g_desc">Description</label><input type="text" name="g_desc" value=""/><br/>
@@ -119,7 +141,6 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	</fieldset>
 
 	';
-
 }
 
 ?>

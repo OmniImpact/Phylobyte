@@ -60,7 +60,7 @@ if($_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Create Us
 	))){
 		$_POST['u_submit'] = null;
 	};
-	
+
 }
 
 //a little javascript
@@ -112,7 +112,7 @@ if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) != n
 	<option value="suspended">Suspended</option>
 	<option value="flagged">Flagged</option>
 	';
-	
+
 	//list of existing groups
 	$groupList = $GLOBALS['UGP']->group_get(null);
 	$groupListSelect = $GLOBALS['UGP']->group_format($groupList, '<option value="%i%">%n%</option>');
@@ -147,12 +147,12 @@ $this->pageArea.= '
 	<label for="u_pass2">Password (Again)</label><input type="password" name="u_pass2" value="'.$_POST['u_pass2'].'"/>
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Create User Account" />
-	
+
 </form>
 </fieldset>
 
 ';
-	
+
 }elseif($_POST['u_submit'] == 'Edit User'){
 
 $this->breadcrumbs.=' &raquo; Edit User';
@@ -209,7 +209,7 @@ foreach($groupList as $groupArray){
 	<option value="'.$groupArray['id'].'"'.$selector.'>'.$groupArray['name'].'</option>
 	';
 }
-	
+
 $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 
 <fieldset>
@@ -241,7 +241,7 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	<hr/>
 	<label for="u_changepass">Change or Update Password?</label><input type="checkbox" name="u_changepass" style="width: 2em;" onclick="changeClass(\'changepassword\',\'itemhide\',\'itemshowblock\');"/><br/>
 	<span id="changepassword" class="itemhide">
-	<label for="u_autopass">Auto-Generate a New Password?</label><input type="checkbox" name="u_autopass" style="width: 2em;" 
+	<label for="u_autopass">Auto-Generate a New Password?</label><input type="checkbox" name="u_autopass" style="width: 2em;"
 	onclick="changeClass(\'passwordinput\',\'itemhide\',\'itemshowblock\');"/><br/>
 	<span class="itemshowblock" id="passwordinput">
 	<label for="u_pass1">Set New Password</label><input type="password" name="u_pass1" value=""/><br/>
@@ -249,7 +249,25 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	</span>
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Save User Details" />
-	
+
+</form>
+</fieldset>
+
+<fieldset>
+	<legend>Secondary Groups</legend>
+<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+
+	<p>existing groups will be listed here...</p>
+
+	<hr/>
+
+	<label for="u_primarygroup">Select Group</label>
+	<select name="u_primarygroup">
+		'.$groupListSelect.'
+	</select><br/>
+
+	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Secondary Group" />
+
 </form>
 </fieldset>
 
@@ -305,6 +323,7 @@ $this->pageArea.= '
 
 	<div style="display: block; text-align: right;">
 		<input type="submit" name="u_submit" value="Edit User" style="width: 14em;" />
+		<input type="submit" name="u_submit" value="Edit Attributes" style="width: 14em;" />
 		<input type="submit" name="u_submit" value="Delete User"  style="width: 14em;" />
 	</div>
 

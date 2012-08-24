@@ -51,43 +51,17 @@ if(isset($_POST['p_submit'])){
 		$email = $this->sessionUserInfo['email'];
 	}
 
-	if(trim($_POST['p_fname']) != null){
-		$fname = stripslashes($_POST['p_fname']);
+	if(trim($_POST['p_name']) != null){
+		$name = stripslashes($_POST['p_name']);
 	}else{
-		$fname = $this->sessionUserInfo['fname'];
-	}
-
-	if(trim($_POST['p_lname']) != null){
-		$lname = stripslashes($_POST['p_lname']);
-	}else{
-		$lname = $this->sessionUserInfo['lname'];
-	}
-
-	if(ctype_digit($_POST['p_personalphone'])){
-		$personalphone = stripslashes($_POST['p_personalphone']);
-	}else{
-		$personalphone = $this->sessionUserInfo['personalphone'];
-	}
-
-	if(ctype_digit($_POST['p_publicphone'])){
-		$publicphone = stripslashes($_POST['p_publicphone']);
-	}else{
-		$publicphone = $this->sessionUserInfo['publicphone'];
-	}
-
-	if(trim($_POST['p_description']) != null){
-		$description = stripslashes($_POST['p_description']);
-	}else{
-		$description = $this->sessionUserInfo['description'];
+		$name = $this->sessionUserInfo['name'];
 	}
 
 	//now that any potential changes have been saved to the session, update the database
-	$description = $this->phylobyteDB->quote($description);
-	$fname = $this->phylobyteDB->quote($fname);
-	$lname = $this->phylobyteDB->quote($lname);
+	$name = $this->phylobyteDB->quote($name);
 	if($this->phylobyteDB->exec("
-			UPDATE p_users SET username='$username', passwordhash='$passwordhash', status='active', email='$email', fname=$fname, lname=$lname,
-			publicphone='$publicphone', personalphone='$personalphone', description=$description WHERE id={$_SESSION['loginid']};
+			UPDATE p_users SET username='$username', passwordhash='$passwordhash', status='active', email='$email', name=$name
+			WHERE id={$_SESSION['loginid']};
 			") > 0) $this->messageAddNotification('Your changes have been saved.');
 
 	$userquery = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
@@ -133,16 +107,8 @@ bkLib.onDomLoaded(function() {
 	<legend>My Acount Details</legend>
 <form action="?phylobyte=account" method="POST">
 
-	<label for="p_fname">First Name</label><input type="text" name="p_fname" value="'.$this->sessionUserInfo['fname'].'"/><br/>
-	<label for="p_lname">Last Name</label><input type="text" name="p_lname" value="'.$this->sessionUserInfo['lname'].'"/><br/>
+	<label for="p_name">Nick Name</label><input type="text" name="p_name" value="'.$this->sessionUserInfo['name'].'"/><br/>
 	<label for="p_email">eMail Address</label><input type="text" name="p_email" value="'.$this->sessionUserInfo['email'].'"/><br/>
-	<label for="p_personalphone">Personal Phone Number</label><input type="text" name="p_personalphone" value="'.$this->sessionUserInfo['personalphone'].'"/><br/>
-	<label for="p_publicphone">Public Phone Number</label><input type="text" name="p_publicphone" value="'.$this->sessionUserInfo['publicphone'].'"/><br/>
-	<label for="p_description">Personal Description</label>
-	
-	<textarea rows="6" name="p_description" id="p_description">'.$this->sessionUserInfo['description'].'</textarea>
-	<div style="float: none; clear: both; height: 0; overflow: hidden;">&nbsp;</div>
-	
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Save Account Details" />
 	
 </form>

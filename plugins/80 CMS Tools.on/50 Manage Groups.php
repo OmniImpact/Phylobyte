@@ -10,6 +10,14 @@ if(($_POST['g_submit'] == 'Add Group' || $_POST['g_submit'] == 'Save Group') && 
 
 if($_POST['g_submit'] == 'Delete Group'){
 	$GLOBALS['UGP']->group_delete(stripslashes($_POST['g_groupid']));
+	$_POST['g_action'] = 'delete';
+}
+
+if($_POST['g_submit'] == 'Add Attribute'){
+	$gid = stripslashes($_POST['g_groupid']);
+	$attribute = stripslashes($_POST['g_attribute']);
+	$default = stripslashes($_POST['g_default']);
+	$GLOBALS['UGP']->group_attributeAdd($gid, $attribute, $default);
 }
 
 //a little javascript
@@ -38,7 +46,7 @@ $this->pageArea.= '
 </script>
 ';
 
-if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
+if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 
 	$this->breadcrumbs.=' &raquo; Edit Group';
 
@@ -59,10 +67,12 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	<fieldset>
 		<legend>Group Attributes</legend>
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+		<input type="hidden" name="g_action" value="edit" />
+		<input type="hidden" name="g_groupid" value="%i%" />
 
-		<label for="u_filter">Attribute Name</label><input type="text" name="u_filter" value="'.$_SESSION['user_list_filter'].'"/><br/>
-		<label for="u_limit">Default Value</label><input type="text" name="u_limit" value=""/><br/>
-		<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Attribute" />
+		<label for="g_attribute">Attribute Name</label><input type="text" name="g_attribute" value="'.$_SESSION['user_list_filter'].'"/><br/>
+		<label for="g_default">Default Value</label><input type="text" name="g_default" value=""/><br/>
+		<label for="g_submit">&nbsp;</label><input type="submit" name="g_submit" value="Add Attribute" />
 
 		<table class="selTable">
 			<tr>
@@ -71,7 +81,7 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 		</table>
 
 		<div style="display: block; text-align: right;">
-			<input type="submit" name="u_submit" value="Delete Attribute"  style="width: 14em;" />
+			<input type="submit" name="g_submit" value="Delete Attribute"  style="width: 14em;" />
 		</div>
 
 	</form>
@@ -133,6 +143,7 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 		</table>
 
 		<div style="display: block; text-align: right;">
+			<input type="hidden" name="g_action" value="edit" />
 			<input type="submit" name="g_submit" value="Edit Group" style="width: 14em;" />
 			<input type="submit" name="g_submit" value="Delete Group"  style="width: 14em;" />
 		</div>

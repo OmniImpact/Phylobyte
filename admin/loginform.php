@@ -25,8 +25,8 @@ if(isset($_POST['p_submit']) || $this->sessionUserInfo['status'] == 'override'){
 	if($userqueryArray['id'] != null){
 		//we have a user! we now check if override is set
 		if($userqueryArray['status'] == 'override'){
-			//log the user in anyway, and return true
 			$_SESSION['loginid'] = $userqueryArray['id'];
+			//log the user in anyway, and return true
 			$userquery = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
 			$userquery->execute();
 			$userqueryArray = $userquery->fetchAll();
@@ -40,8 +40,11 @@ if(isset($_POST['p_submit']) || $this->sessionUserInfo['status'] == 'override'){
 			$passwordhash = sha1($currentPassword);
 			if($userqueryArray['passwordhash'] == $passwordhash && $userqueryArray['status'] == 'active'){
 			//good so far, check to see if in group "admin"
-				if($userqueryArray['primarygroup'] == 1){
-					$this->messageAddNotification('Welcome, '.$userqueryArray['fname'].' '.$userqueryArray['lname'].'. Thank you for logging in.');
+			$adminquery = $this->phylobyteDB->prepare("SELECT * FROM p_memberships WHERE userid='{$userqueryArray['id']}' AND groupid='1';");
+			$adminquery->execute();
+			$adminqueryArray = $adminquery->fetchAll();
+				if(count($adminqueryArray) > 0){
+					$this->messageAddNotification('Welcome, '.$userqueryArray['name'].'. Thank you for logging in.');
 					$_SESSION['loginid'] = $userqueryArray['id'];
 					$this->sessionUserInfo = $userqueryArray;
 					$accountverify = 'success';

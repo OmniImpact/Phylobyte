@@ -10,12 +10,12 @@ if($EV->check_email_address(stripslashes($_POST['p_email']))){
 	$this->messageAddError('Not a valid email address.');
 }
 
-if(strlen(stripslashes($_POST['p_password1'])) < 5){
-	$this->messageAddError('Password must be more than five characters.');
+if(strlen(stripslashes($_POST['p_password1'])) < 4){
+	$this->messageAddError('Password must be more than four characters.');
 }
 
 if(stripslashes($_POST['p_password1']) == stripslashes($_POST['p_password2']) &&
-	isset($this->sessionUserInfo['email']) && strlen(stripslashes($_POST['p_password1'])) >= 5 ){
+	isset($this->sessionUserInfo['email']) && strlen(stripslashes($_POST['p_password1'])) >= 4 ){
 	//ready to write configuration
 	//if no group is specified, put the user in "administrator"
 	$this->messageAddAlert('Passwords match. Ready to write initial configuration.');

@@ -15,6 +15,7 @@ class ugp{
 	 * Add or update a group. if an ID is provided and the group exists it will be updated.
 	 * @param Array groupArray with id, name, description
 	 * @return boolean
+	 * TODO, if instead of an array, a GID is specified, allow an attributeArray
 	 **/
 	function group_put($groupArray){
 		//take in a group array, write it to the database
@@ -24,6 +25,11 @@ class ugp{
 		if($groupArray['id'] == 1){
 			phylobyte::messageAddAlert('Please note that "admin" is a special group that you can not rename or delete.');
 			$groupArray['name'] = 'admin';
+		}
+
+		if(!ctype_alnum($groupArray['name'])){
+			phylobyte::messageAddAlert('Group names must be alphanumeric.');
+			return false;
 		}
 
 		$name = $this->pDB->quote($groupArray['name']);
@@ -61,7 +67,7 @@ class ugp{
 	 * @param Array userArray with attributes
 	 * @return boolean
 	 **/
-	function  user_put($userArray){
+	function  user_put($userArray, $attributeArray){
 
 		//if no user id is supplied, we have a certain set of requirements
 		//a user name has to be provided, and either a password or autopass
@@ -79,7 +85,7 @@ class ugp{
 		}
 
 		if($userArray['id'] == null){
-			if($userArray['name'] == null || strlen($userArray['password']) < 4){
+			if($userArray['username'] == null || strlen($userArray['password']) < 4){
 				phylobyte::messageAddError('You need to provide at least a user name and password to create a new user.');
 				return false;
 			}
@@ -87,7 +93,7 @@ class ugp{
 
 		//now, regardless of whether a user id is supplied, we need to make sure
 		//the user name is available
-		$userNameArray = $this->user_get($userArray['name']);
+		$userNameArray = $this->user_get($userArray['username']);
 		if($userNameArray[0]['id'] != $userArray['id'] && $userNameArray[0] != null){
 			phylobyte::messageAddError('A user with that name already exists.');
 			return false;
@@ -101,67 +107,62 @@ class ugp{
 			return false;
 		}
 
-		//and just in case, we make sure that it's not the last admin
-		//something is WRONG because that is YOU, and this is impossible
-		if($userArray['id'] != null && $userArray['primarygroup'] != '1' && $this->group_format($this->group_get('1'), '%m%') == '1'){
-			phylobyte::messageAddError('You can not change the group of the last admin.');
-			return false;
-		}
-
 		//write changes to database, keepind in mind:
 		//if the password is null, don't touch it
 		//if the user ID is null, don't privide it
 		//id, description, passwordhash are optional
-		$passwordhash = null;
-		if ($userArray['password'] != null) {
-		    $passwordhash = sha1($userArray['password']);
-		}
-
 
 		if($userArray['id'] != null){
-			$optionalKeys.= 'id, ';
+			$optionalKeys.= ' id,';
 			$optionalVals.= $this->pDB->quote($userArray['id']).', ';
 		}
-		if($userArray['description'] != null){
-			$optionalKeys.= 'description, ';
-			$optionalVals.= $this->pDB->quote($userArray['description']).', ';
-		}
-		if($passwordhash != null){
-			$optionalKeys.= 'passwordhash, ';
-			$optionalVals.= $this->pDB->quote($passwordhash).', ';
+		if(trim($userArray['password']) != ''){
+			$optionalKeys.= ' passwordhash,';
+			$quotedPassword = $this->pDB->quote(sha1($userArray['password']));
+			$optionalVals.= $quotedPassword.', ';
+			$optionalUpdate = "passwordhash=$quotedPassword,";
 		}
 
-		if($userArray['status'] == null || $userArray['primarygroup'] == null){
-			phylobyte::messageAddError('You must supply a status and primary group.');
-			return false;
-		}
-
-		$name = $this->pDB->quote($userArray['name']);
+		$username = $this->pDB->quote($userArray['username']);
 		$status = $this->pDB->quote($userArray['status']);
-		$primarygroup = $this->pDB->quote($userArray['primarygroup']);
 		$email = $this->pDB->quote($userArray['email']);
-		$fname = $this->pDB->quote($userArray['fname']);
-		$lname = $this->pDB->quote($userArray['lname']);
-		$personalphone = $this->pDB->quote($userArray['personalphone']);
-		$publicphone = $this->pDB->quote($userArray['publicphone']);
+		$name = $this->pDB->quote($userArray['name']);
 
-		$query = $this->pDB->prepare("
-			REPLACE INTO p_users ($optionalKeys username, status, primarygroup, email, fname, lname, personalphone, publicphone)
-			VALUES ($optionalVals $name, $status, $primarygroup, $email, $fname, $lname, $personalphone, $publicphone); ");
+		$query = "
+			INSERT INTO p_users ($optionalKeys username, status, email, name)
+			VALUES ($optionalVals $username, $status, $email, $name)
+			ON DUPLICATE KEY UPDATE
+			$optionalUpdate name=$name, email=$email, status=$status, username=$username;
+			";
+		phylobyte::messageAddDebug($query);
+		$query = $this->pDB->prepare($query);
 		if($query->execute()){
-			phylobyte::messageAddNotification('Successfully updated users.');
+			phylobyte::messageAddNotification('Successfully updated user.');
 			return true;
 		}else{
-			phylobyte::messageAddError('Error updating users.');
+			phylobyte::messageAddError('Error updating user.');
 			return false;
 		}
 	}
 
+	function user_putattr($uid, $attributeArray){
 
+	}
+
+	function user_getattr($uid, $gid, $gtemplate, $attributeTemplate){
+
+	}
+
+	function user_formatattr($attributeArray, $attributeTemplate){
+
+	}
+
+	
 	/**
 	 * Delete a group.
 	 * @param int groupID
 	 * @return boolean
+	 * TODO add second perameter for deleting attribute
 	 **/
 	function group_delete($groupID){
 
@@ -240,8 +241,8 @@ class ugp{
 			$group = $this->pDB->prepare("
 				SELECT *, (
 					SELECT COUNT(*)
-					FROM p_users
-					WHERE primarygroup=p_groups.id
+					FROM p_memberships
+					WHERE groupid=p_groups.id
 					) as members
 				FROM p_groups WHERE id=$groupID ORDER BY name;");
 			$group->execute();
@@ -251,8 +252,8 @@ class ugp{
 			$groups = $this->pDB->prepare("
 				SELECT *, (
 					SELECT COUNT(*)
-					FROM p_users
-					WHERE primarygroup=p_groups.id
+					FROM p_memberships
+					WHERE groupid=p_groups.id
 					) as members
 				FROM p_groups
 				WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
@@ -266,6 +267,7 @@ class ugp{
 	 * Retrieve a user and its information from the database.
 	 * @param String userID otherwise pass null and a filter to search users
 	 * @return Array
+	 * TODO include the user's attributeArray, key is attribute group, value is attributeArray
 	 **/
 	function user_get($userID, $filter = '', $limit = 100, $orderBy = 'username'){
 		//return array or multiple arrays
@@ -297,9 +299,8 @@ class ugp{
 			$users = $this->pDB->prepare("
 				SELECT *
 				FROM p_users
-				WHERE fname LIKE '%$filter%' or
-				lname LIKE '%$filter%' or email LIKE '%$filter%' or
-				description LIKE '%$filter%' or username LIKE '%$filter%'
+				WHERE username LIKE '%$filter%' OR
+				email LIKE '%$filter%' OR name LIKE '%$filter%'
 				ORDER BY $orderBy
 				LIMIT $limit;");
 			$users->execute();
@@ -318,6 +319,7 @@ class ugp{
 	 * %d% = description
 	 * %m% = members
 	 * @return String
+	 * TODO add format string for groups attributes
 	 **/
 	function group_format($groupsArray, $formatString){
 		//take in an array of groups, format based on the string
@@ -355,6 +357,7 @@ class ugp{
 	 * %u% = username
 	 * @param groupFormatString
 	 * @return String
+	 * TODO since group_format now accepts attribute format, allow it here too
 	 **/
 	function user_format($usersArray, $formatString = '%i%, %u% <br/>', $groupFormatString = '%n%'){
 		//take in an array of groups, format based on the string
@@ -399,29 +402,17 @@ class ugp{
 		    $needles = array(
 				'%i%',
 				'%u%',
-				'%fn%',
-				'%ln%',
+				'%n%',
 				'%e%',
-				'%p%',
-				'%P%',
-				'%d%',
 				'%s%',
-				'%g%',
-				'%G%',
 				'%sC%'
 		    );
 		    $replacements = array(
 				$userArray['id'],
 				$userArray['username'],
-				$userArray['fname'],
-				$userArray['lname'],
+				$userArray['name'],
 				$userArray['email'],
-				$userArray['personalphone'],
-				$userArray['publicphone'],
-				$userArray['description'],
 				$userArray['status'],
-				$userArray['primarygroup'],
-				$this->group_format($this->group_get($userArray['primarygroup']), '%n%'),
 				$color
 		    );
 
@@ -431,6 +422,39 @@ class ugp{
 		return $result;
 	}
 
+	function group_attributeAdd($gid, $attribute, $default){
+		phylobyte::messageAddDebug("Preparing to add $attribute with default $default to $gid.");
+	}
+
+	/**
+	 * Retrieve an attribute and its information from the database.
+	 * @param gid=String/Integer groupID, null returns all
+	 * @param filter=null/String filter attributes by name and default value (union)
+	 * @return Array
+	 **/
+	function group_attributesGet($gid, $filter){
+		phylobyte::messageAddDebug("group_attributesGet( '$gid', '$filter' )");
+
+		return 'Array';
+	}
+
+	/**
+	 * Format an array of attribute information, use with group_attributesGet()
+	 * @param attributeArray=Array attributesArray use with group_attributesGet() to ensure proper format
+	 * @param formatTemplage=String string with formatting markers to replace with the attribute information
+	 * %i% = id
+	 * %g% = groupId
+	 * %G% = groupName (not yet implemented)
+	 * %a% = attribute
+	 * %d% = default
+	 * @return String
+	 **/
+	function group_attributesFormat($attributeArray, $template){
+		phylobyte::messageAddDebug("group_attributesFormat( '$attributeArray', '$template' )");
+
+		
+		return 'formatted';
+	}
 
 }
 

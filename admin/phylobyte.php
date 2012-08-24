@@ -2,8 +2,6 @@
 
 class phylobyte{
 
-	static $messageStampBase;
-	static $messageStampItr = 0;
 	static $messageArea;
 	static $navigationArea;
 	static $mobileNav;
@@ -20,7 +18,7 @@ class phylobyte{
 	static $phylobyteDB;
 
 	function __construct(){
-		$this->messageStampBase = time();
+		$GLOBALS['MESSAGESTAMPBASE'] = microtime(true);
 		try{
 			if(count($_SESSION['dbinfo']) < 2){
 				if(is_file('../data/dbconfig.array')){
@@ -139,21 +137,13 @@ class phylobyte{
 				CREATE TABLE IF NOT EXISTS p_users(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
 					username TEXT,
-					password TEXT,
-					passwordtype TEXT,
+					name TEXT,
+					passwordhash TEXT,
 					status TEXT,
 					statusvalue TEXT,
 					super TEXT,
-					email TEXT,
-					primarygroup TEXT,
-					passwordhash TEXT,
-					fname TEXT,
-					lname TEXT,
-					personalphone TEXT,
-					publicphone TEXT,
-					description TEXT
+					email TEXT
 				);");
-				//soon i will delete everything after statusvalue
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_gattributes(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -191,8 +181,12 @@ class phylobyte{
 				INSERT INTO p_groups (name, description)
 				VALUES ('admin', 'Phylobyte default administrator group');") &&
 				$this->phylobyteDB->exec("
-				INSERT INTO p_users (username, status, primarygroup, fname)
-				VALUES ('admin', 'override', '1', 'Administrator');")){
+				INSERT INTO p_users (username, status, name)
+				VALUES ('admin', 'override', 'Administrator');") &&
+				$this->phylobyteDB->exec("
+				INSERT INTO p_memberships (userid, groupid)
+				VALUES ('1', '1');")
+				){
 					$this->messageAddDebug('Initialized Phylobyte User Tables');
 				}
 			}
@@ -208,8 +202,8 @@ class phylobyte{
 
 	function messageStamp(){
 		$GLOBALS['MESSAGESTAMPITR']++;
-		//this needs to use messagestampbase, and not the time directly
-		return time().':'.$GLOBALS['MESSAGESTAMPITR']++;
+		//this needs to use messageStampBase, and not the time directly
+		return $GLOBALS['MESSAGESTAMPBASE'].':'.$GLOBALS['MESSAGESTAMPITR']++;
 	}
 
 	function login(){
@@ -298,7 +292,7 @@ class phylobyte{
 				<li>
 					<a href="../">View Website</a>
 				</li>
-				<li><a style="min-width: 10em; text-align: center;">Welcome, '.$this->sessionUserInfo['fname'].' '.$this->sessionUserInfo['lname'].'</a>
+				<li><a style="min-width: 10em; text-align: center;">Welcome, '.$this->sessionUserInfo['name'].' '.$this->sessionUserInfo['lname'].'</a>
 					<ul style="float: right; min-width: 100%;">
 						<li><a href="?phylobyte=account">My Account</a></li>
 						<li><a href="?phylobyte=settings">Settings</a></li>
@@ -445,7 +439,7 @@ class phylobyte{
 	}
 	
 	function build_finish(){
-		$this->messageArea = $GLOBALS['MESSAGES']->pullquery('%v%', "SELECT * FROM __REGISTRY____pmessages WHERE mykey LIKE '{$this->messageStampBase}%';");
+		$this->messageArea = $GLOBALS['MESSAGES']->pullquery('%v%', "SELECT * FROM __REGISTRY____pmessages WHERE mykey LIKE '{$GLOBALS['MESSAGESTAMPBASE']}%';");
 		$this->messageArea = str_replace('#e.', '<div class="error">', $this->messageArea);
 		$this->messageArea = str_replace('#a.', '<div class="alert">', $this->messageArea);
 		$this->messageArea = str_replace('#n.', '<div class="notification">', $this->messageArea);

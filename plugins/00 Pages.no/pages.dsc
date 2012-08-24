@@ -1,1 +1,0 @@
-Create and manage pages on your website.

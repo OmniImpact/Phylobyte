@@ -1,1 +1,0 @@
-Add, Delete, and Manage Files for your Website

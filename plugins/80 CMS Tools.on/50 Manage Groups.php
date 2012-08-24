@@ -52,6 +52,8 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 
 	$group = $GLOBALS['UGP']->group_get($_POST['g_groupid']);
 
+	$attributes = $GLOBALS['UGP']->group_attributesGet($_POST['g_groupid']);;
+
 	$groupEditTemplate='
 	<fieldset>
 		<legend>Update Group Information</legend>
@@ -90,18 +92,6 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 	';
 
 	$this->pageArea.=$GLOBALS['UGP']->group_format($group, $groupEditTemplate);
-
-	$this->docArea='
-	<h3>Edit Group</h3>
-	<p>If you would like to change the name of the description of a group, edit the values in the form and click "Save Group".</p>
-
-	<h3>Cancel Editing</h3>
-	<p>If you do not want to save your changes, click "Cancel Editing".</p>
-
-	<h3>The Admin Group</h3>
-	<p>Please note that you can only change the description of the <em>admin</em> group. If you try to change the name, you will receive an error.</p>
-	';
-
 
 }else{
 

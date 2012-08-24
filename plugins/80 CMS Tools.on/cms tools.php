@@ -15,7 +15,6 @@ class ugp{
 	 * Add or update a group. if an ID is provided and the group exists it will be updated.
 	 * @param Array groupArray with id, name, description
 	 * @return boolean
-	 * TODO, if instead of an array, a GID is specified, allow an attributeArray
 	 **/
 	function group_put($groupArray){
 		//take in a group array, write it to the database
@@ -423,19 +422,57 @@ class ugp{
 	}
 
 	function group_attributeAdd($gid, $attribute, $default){
-		phylobyte::messageAddDebug("Preparing to add $attribute with default $default to $gid.");
+		if(!ctype_alnum($attribute)){
+			phylobyte::messageAddAlert('Attribute names must be alphanumeric.');
+			return false;
+		}
+
+		$attribute = $this->pDB->quote($attribute);
+		$gid = $this->pDB->quote($gid);
+		//check if the attribute exists
+		$group = $this->pDB->prepare("
+			SELECT id
+			FROM p_gattributes WHERE gid=$gid AND attribute=$attribute;");
+		$group->execute();
+		$group = $group->fetchAll();
+
+		if(count($group) >= 1){
+			phylobyte::messageAddError('Failed to update group.');
+			phylobyte::messageAddAlert('An attribute of that name already exists within this group.');
+			return false;
+		}
+
+		$default = $this->pDB->quote($default);
+		$query = $this->pDB->prepare("
+			INSERT INTO p_gattributes (gid, attribute, defaultvalue)
+			VALUES ($gid, $attribute, $default); ");
+		if($query->execute()){
+			phylobyte::messageAddNotification('Successfully added attribute.');
+			return true;
+		}else{
+			phylobyte::messageAddError('Error updating group.');
+			return false;
+		}
 	}
 
 	/**
 	 * Retrieve an attribute and its information from the database.
 	 * @param gid=String/Integer groupID, null returns all
-	 * @param filter=null/String filter attributes by name and default value (union)
+	 * @param filter=null/String filter attributes by name and default value (union), if true, return by attribute ID, false, delete
 	 * @return Array
 	 **/
-	function group_attributesGet($gid, $filter){
-		phylobyte::messageAddDebug("group_attributesGet( '$gid', '$filter' )");
+	function group_attributesGet($gid, $filter = ''){
 
-		return 'Array';
+		if($filter === true){
+
+		}elseif($filter === false){
+
+		}else{
+			phylobyte::messageAddDebug("group_attributesGet( '$gid', '$filter' )");
+			
+			
+		}
+		
 	}
 
 	/**

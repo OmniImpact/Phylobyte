@@ -2,7 +2,7 @@
 
 if(($_POST['g_submit'] == 'Add Group' || $_POST['g_submit'] == 'Save Group') && trim(stripslashes($_POST['g_name'])) != null ){
 	$GLOBALS['UGP']->group_put(Array(
-		'id' => stripslashes($_POST['g_id']),
+		'id' => stripslashes($_POST['g_groupid']),
 		'name' => stripslashes($_POST['g_name']),
 		'description' => stripslashes($_POST['g_desc']),
 	));
@@ -10,13 +10,21 @@ if(($_POST['g_submit'] == 'Add Group' || $_POST['g_submit'] == 'Save Group') && 
 
 if($_POST['g_submit'] == 'Delete Group'){
 	$GLOBALS['UGP']->group_delete(stripslashes($_POST['g_groupid']));
+	$_POST['g_action'] = 'delete';
+}
+
+if($_POST['g_submit'] == 'Add Attribute'){
+	$gid = stripslashes($_POST['g_groupid']);
+	$attribute = stripslashes($_POST['g_attribute']);
+	$default = stripslashes($_POST['g_default']);
+	$GLOBALS['UGP']->group_attributeAdd($gid, $attribute, $default);
 }
 
 //a little javascript
 $this->pageArea.= '
 <script type="text/javascript">
 	var lastChangedName = null;
-	
+
 	function changeClass(targetID, classA, classB){
 		var node = document.getElementById(targetID);
 		lastChangedName = targetID;
@@ -38,36 +46,52 @@ $this->pageArea.= '
 </script>
 ';
 
-if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
+if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 
 	$this->breadcrumbs.=' &raquo; Edit Group';
 
 	$group = $GLOBALS['UGP']->group_get($_POST['g_groupid']);
 
-	$this->pageArea.='
+	$attributes = $GLOBALS['UGP']->group_attributesGet($_POST['g_groupid']);;
+
+	$groupEditTemplate='
 	<fieldset>
 		<legend>Update Group Information</legend>
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
-		<input type="hidden" name="g_groupid" value="'.$group['id'].'" />
-		<label for="g_name">Group Name</label><input type="text" name="g_name" value="'.$group['name'].'"/><br/>
-		<label for="g_desc">Description</label><input type="text" name="g_desc" value="'.$group['description'].'"/><br/>
+		<input type="hidden" name="g_groupid" value="%i%" />
+		<label for="g_name">Group Name</label><input type="text" name="g_name" value="%n%"/><br/>
+		<label for="g_desc">Description</label><input type="text" name="g_desc" value="%d%"/><br/>
 		<label for="g_submit">&nbsp;</label><input type="submit" name="g_submit" value="Save Group" />
 		<label for="g_cancel">&nbsp;</label><input type="submit" name="g_cancel" value="Cancel Editing" />
 	</form>
 	</fieldset>
+
+	<fieldset>
+		<legend>Group Attributes</legend>
+	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+		<input type="hidden" name="g_action" value="edit" />
+		<input type="hidden" name="g_groupid" value="%i%" />
+
+		<label for="g_attribute">Attribute Name</label><input type="text" name="g_attribute" value="'.$_SESSION['user_list_filter'].'"/><br/>
+		<label for="g_default">Default Value</label><input type="text" name="g_default" value=""/><br/>
+		<label for="g_submit">&nbsp;</label><input type="submit" name="g_submit" value="Add Attribute" />
+
+		<table class="selTable">
+			<tr>
+				<th style="width: 6em;">Select</th><th>Attribute Name</th><th>Default Value</th>
+			</tr>
+		</table>
+
+		<div style="display: block; text-align: right;">
+			<input type="submit" name="g_submit" value="Delete Attribute"  style="width: 14em;" />
+		</div>
+
+	</form>
+	</fieldset>
+
 	';
 
-	$this->docArea='
-	<h3>Edit Group</h3>
-	<p>If you would like to change the name of the description of a group, edit the values in the form and click "Save Group".</p>
-
-	<h3>Cancel Editing</h3>
-	<p>If you do not want to save your changes, click "Cancel Editing".</p>
-
-	<h3>The Admin Group</h3>
-	<p>Please note that you can only change the description of the <em>admin</em> group. If you try to change the name, you will receive an error.</p>
-	';
-
+	$this->pageArea.=$GLOBALS['UGP']->group_format($group, $groupEditTemplate);
 
 }else{
 
@@ -89,7 +113,7 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	$this->pageArea.= '
 
 	<fieldset>
-		<legend>Add New Primary Group</legend>
+		<legend>Add New Group</legend>
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 		<label for="g_name">Group Name</label><input type="text" name="g_name" value=""/><br/>
 		<label for="g_desc">Description</label><input type="text" name="g_desc" value=""/><br/>
@@ -109,6 +133,7 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 		</table>
 
 		<div style="display: block; text-align: right;">
+			<input type="hidden" name="g_action" value="edit" />
 			<input type="submit" name="g_submit" value="Edit Group" style="width: 14em;" />
 			<input type="submit" name="g_submit" value="Delete Group"  style="width: 14em;" />
 		</div>
@@ -117,7 +142,6 @@ if($_POST['g_submit'] == 'Edit Group' && ctype_digit($_POST['g_groupid'])){
 	</fieldset>
 
 	';
-
 }
 
 ?>

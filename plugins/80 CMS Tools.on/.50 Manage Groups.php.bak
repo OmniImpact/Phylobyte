@@ -13,6 +13,12 @@ if($_POST['g_submit'] == 'Delete Group'){
 	$_POST['g_action'] = 'delete';
 }
 
+if($_POST['g_submit'] == 'Delete Attribute'){
+	$gid = stripslashes($_POST['g_groupid']);
+	$id = stripslashes($_POST['g_attributeid']);
+	$GLOBALS['UGP']->group_attributesGet($id, false);
+}
+
 if($_POST['g_submit'] == 'Add Attribute'){
 	$gid = stripslashes($_POST['g_groupid']);
 	$attribute = stripslashes($_POST['g_attribute']);
@@ -65,12 +71,24 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 		<label for="g_cancel">&nbsp;</label><input type="submit" name="g_cancel" value="Cancel Editing" />
 	</form>
 	</fieldset>
+	';
 
+	$attributesArray = $GLOBALS['UGP']->group_attributesGet($_POST['g_groupid'], '');
+
+	$groupAttributesTemplate = '
+	<tr id="g_attributes_row_%i%" class="table_row_normal">
+	<td><input type="radio" name="g_attributeid" value="%i%"
+		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'g_attributes_row_%i%\', \'table_row_normal\', \'table_row_highlight\');"
+		style="cursor: pointer;"/></td>
+	<td>%a%</td><td>%d%</td></tr>
+	';
+
+	$groupAttributes='
 	<fieldset>
 		<legend>Group Attributes</legend>
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 		<input type="hidden" name="g_action" value="edit" />
-		<input type="hidden" name="g_groupid" value="%i%" />
+		<input type="hidden" name="g_groupid" value="'.$_POST['g_groupid'].'" />
 
 		<label for="g_attribute">Attribute Name</label><input type="text" name="g_attribute" value="'.$_SESSION['user_list_filter'].'"/><br/>
 		<label for="g_default">Default Value</label><input type="text" name="g_default" value=""/><br/>
@@ -80,6 +98,7 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 			<tr>
 				<th style="width: 6em;">Select</th><th>Attribute Name</th><th>Default Value</th>
 			</tr>
+			'.$GLOBALS['UGP']->group_attributesFormat($attributesArray, $groupAttributesTemplate).'
 		</table>
 
 		<div style="display: block; text-align: right;">
@@ -88,10 +107,11 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 
 	</form>
 	</fieldset>
-
 	';
 
+
 	$this->pageArea.=$GLOBALS['UGP']->group_format($group, $groupEditTemplate);
+	$this->pageArea.=$groupAttributes;
 
 }else{
 

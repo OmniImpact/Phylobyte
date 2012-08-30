@@ -461,16 +461,32 @@ class ugp{
 	 * @param filter=null/String filter attributes by name and default value (union), if true, return by attribute ID, false, delete
 	 * @return Array
 	 **/
-	function group_attributesGet($gid, $filter){
+	function group_attributesGet($gid, $filter = ''){
 
-		if($filter === true){
-
-		}elseif($filter === false){
+		if($filter === false){
+		//if this is the case, $gid is actually the attribute id
+		$id = $this->pDB->quote($gid);
+		$query = $this->pDB->prepare("
+		DELETE FROM p_gattributes WHERE id=$id;
+		");
+		if($query->execute()){
+			phylobyte::messageAddNotification('Successfully deleted attribute.');
+			return true;
+		}else{
+			phylobyte::messageAddError('Error deleting attribute.');
+			return false;
+		}
 
 		}else{
-			phylobyte::messageAddDebug("group_attributesGet( '$gid', '$filter' )");
-			
-			
+			$gid = $this->pDB->quote($gid);
+			$filter = $this->pDB->quote('%'.$filter.'%');
+			$attributes = $this->pDB->prepare("
+				SELECT *
+				FROM p_gattributes WHERE gid=$gid AND attribute LIKE $filter OR gid=$gid AND defaultvalue LIKE $filter;");
+			$attributes->execute();
+			$attributes = $attributes->fetchAll();
+
+			return $attributes;
 		}
 		
 	}
@@ -487,10 +503,27 @@ class ugp{
 	 * @return String
 	 **/
 	function group_attributesFormat($attributeArray, $template){
-		phylobyte::messageAddDebug("group_attributesFormat( '$attributeArray', '$template' )");
+	
+		$result = null;
 
-		
-		return 'formatted';
+		foreach($attributeArray as $attribute) {
+		    $needles = array(
+				'%i%',
+				'%g%',
+				'%a%',
+				'%d%'
+		    );
+		    $replacements = array(
+				$attribute['id'],
+				$attribute['gid'],
+				$attribute['attribute'],
+				$attribute['defaultvalue']
+		    );
+		    $result.=str_replace($needles, $replacements, $template);
+		}
+
+		return $result;
+
 	}
 
 }

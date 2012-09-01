@@ -66,7 +66,7 @@ class ugp{
 	 * @param Array userArray with attributes
 	 * @return boolean
 	 **/
-	function  user_put($userArray, $attributeArray){
+	function  user_put($userArray){
 
 		//if no user id is supplied, we have a certain set of requirements
 		//a user name has to be provided, and either a password or autopass
@@ -133,7 +133,6 @@ class ugp{
 			ON DUPLICATE KEY UPDATE
 			$optionalUpdate name=$name, email=$email, status=$status, username=$username;
 			";
-		phylobyte::messageAddDebug($query);
 		$query = $this->pDB->prepare($query);
 		if($query->execute()){
 			phylobyte::messageAddNotification('Successfully updated user.');
@@ -156,6 +155,13 @@ class ugp{
 
 	}
 
+	function membership_add($uid, $gid){
+
+	}
+
+	function membership_remove($mid){
+
+	}
 	
 	/**
 	 * Delete a group.
@@ -234,32 +240,52 @@ class ugp{
 	 * @param String groupID pass null and a filter to search groups
 	 * @return Array
 	 **/
-	function group_get($groupID, $groupsFilter = ''){
-		//if gruoupID, return array, otherwise return multiple array
-		if($groupID != null){
-			$group = $this->pDB->prepare("
-				SELECT *, (
-					SELECT COUNT(*)
-					FROM p_memberships
-					WHERE groupid=p_groups.id
-					) as members
-				FROM p_groups WHERE id=$groupID ORDER BY name;");
-			$group->execute();
-			$group = $group->fetchAll();
-			return $group;
-		}else{
+	function group_get($groupID, $groupsFilter = '', $user = false){
+
+		if(ctype_digit($user)){
+			//this is a little different; we need to get only the groups a user is a member of
+			$userid = $this->pDB->quote($user);
 			$groups = $this->pDB->prepare("
-				SELECT *, (
-					SELECT COUNT(*)
-					FROM p_memberships
-					WHERE groupid=p_groups.id
-					) as members
-				FROM p_groups
-				WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
+				SELECT p_groups.*, (
+						SELECT COUNT(*)
+						FROM p_memberships
+						WHERE groupid=p_groups.id
+						) AS members
+				FROM p_memberships
+				JOIN p_groups ON p_memberships.groupid = p_groups.id
+				WHERE userid=$userid;
+			");
 			$groups->execute();
 			$groups = $groups->fetchAll();
-			return $groups;
+			return $groups;	
+		}else{
+			//if gruoupID, return array, otherwise return multiple array
+			if($groupID != null){
+				$group = $this->pDB->prepare("
+					SELECT *, (
+						SELECT COUNT(*)
+						FROM p_memberships
+						WHERE groupid=p_groups.id
+						) as members
+					FROM p_groups WHERE id=$groupID ORDER BY name;");
+				$group->execute();
+				$group = $group->fetchAll();
+				return $group;
+			}else{
+				$groups = $this->pDB->prepare("
+					SELECT *, (
+						SELECT COUNT(*)
+						FROM p_memberships
+						WHERE groupid=p_groups.id
+						) as members
+					FROM p_groups
+					WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
+				$groups->execute();
+				$groups = $groups->fetchAll();
+				return $groups;
+			}
 		}
+
 	}
 
 	/**
@@ -464,19 +490,18 @@ class ugp{
 	function group_attributesGet($gid, $filter = ''){
 
 		if($filter === false){
-		//if this is the case, $gid is actually the attribute id
-		$id = $this->pDB->quote($gid);
-		$query = $this->pDB->prepare("
-		DELETE FROM p_gattributes WHERE id=$id;
-		");
-		if($query->execute()){
-			phylobyte::messageAddNotification('Successfully deleted attribute.');
-			return true;
-		}else{
-			phylobyte::messageAddError('Error deleting attribute.');
-			return false;
-		}
-
+			//if this is the case, $gid is actually the attribute id
+			$id = $this->pDB->quote($gid);
+			$query = $this->pDB->prepare("
+			DELETE FROM p_gattributes WHERE id=$id;
+			");
+			if($query->execute()){
+				phylobyte::messageAddNotification('Successfully deleted attribute.');
+				return true;
+			}else{
+				phylobyte::messageAddError('Error deleting attribute.');
+				return false;
+			}
 		}else{
 			$gid = $this->pDB->quote($gid);
 			$filter = $this->pDB->quote('%'.$filter.'%');

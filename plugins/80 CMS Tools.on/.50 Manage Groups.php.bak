@@ -77,7 +77,8 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 
 	$groupAttributesTemplate = '
 	<tr id="g_attributes_row_%i%" class="table_row_normal">
-	<td><input type="radio" name="g_attributeid" value="%i%"
+	<td style="text-align: center;">
+			<input type="radio" name="g_attributeid" value="%i%"
 		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'g_attributes_row_%i%\', \'table_row_normal\', \'table_row_highlight\');"
 		style="cursor: pointer;"/></td>
 	<td>%a%</td><td>%d%</td></tr>

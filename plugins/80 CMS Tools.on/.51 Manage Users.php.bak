@@ -19,13 +19,8 @@ if(isset($_POST['u_filter'])){
 	$_SESSION['user_list_filter'] = stripslashes($_POST['u_filter']);
 }
 
-//check that a user name is provided if trying to add a user.
-if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) == null ){
-	$this->messageAddAlert('You must provide a user name to add a new user.');
-	$_POST['u_submit'] = null;
-}
 
-//check that a user name is provided if trying to add a user.
+//check that a user name is provided if trying to edit a user.
 if($_POST['u_submit'] == 'Edit User' && trim(stripslashes($_POST['u_uid'])) == null ){
 	$this->messageAddAlert('You must select a user to edit.');
 	$_POST['u_submit'] = null;
@@ -37,10 +32,30 @@ if($_POST['u_submit'] == 'Delete User'){
 
 //do the rest of the checks for a new user. if it is all good, add the user, issue a success message, and clear 'Add User'
 if($_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Create User Account'){
-	$GLOBALS['UGP']->user_put(Array(
+	//i do need to preprocess the password
+	//null is no change
+
+	if($_POST['u_autopass'] == 'on'){
+		$autopass = true;
+		$password = null;
+	}elseif($_POST['u_pass1'] == $_POST['u_pass2'] && strlen($_POST['u_pass1']) >= 4){
+		$password = stripslashes($_POST['u_pass1']);
+	}else{
+		$password = null;
+	}
+
+	if($GLOBALS['UGP']->user_put(Array(
 		'id' => stripslashes($_POST['u_uid']),
-		'primarygroup' => stripslashes($_POST['u_primarygroup'])
-	));
+		'username' => stripslashes($_POST['u_username']),
+		'name' => stripslashes($_POST['u_name']),
+		'email' => stripslashes($_POST['u_email']),
+		'status' => stripslashes($_POST['u_status']),
+		'autopass' => $autopass,
+		'password' => $password
+	))){
+		$_POST['u_submit'] = null;
+	};
+
 }
 
 //a little javascript
@@ -70,7 +85,7 @@ $this->pageArea.= '
 ';
 
 //if new user, edit user, or viewing
-if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) != null){
+if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_username'])) != null || $_POST['u_submit'] == 'Create User Account'){
 	$this->breadcrumbs.=' &raquo; Add New User';
 
 	//help
@@ -92,7 +107,7 @@ if($_POST['u_submit'] == 'Add User' && trim(stripslashes($_POST['u_name'])) != n
 	<option value="suspended">Suspended</option>
 	<option value="flagged">Flagged</option>
 	';
-	
+
 	//list of existing groups
 	$groupList = $GLOBALS['UGP']->group_get(null);
 	$groupListSelect = $GLOBALS['UGP']->group_format($groupList, '<option value="%i%">%n%</option>');
@@ -102,23 +117,16 @@ $this->pageArea.= '
 <fieldset>
 	<legend>Add New User</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
-	<input type="hidden" name="u_initialusername" value="'.$_POST['u_name'].'" />
+	<input type="hidden" name="u_initialusername" value="'.$_POST['u_username'].'" />
 	<input type="hidden" name="u_uid" value="" />
-	<label for="u_name">User Name</label><input type="text" name="u_name" value="'.$_POST['u_name'].'"/><br/>
-	<label for="u_fname">First Name</label><input type="text" name="u_fname" value="'.$_POST['u_fname'].'"/><br/>
-	<label for="u_lname">Last Name</label><input type="text" name="u_lname" value="'.$_POST['u_lname'].'"/><br/>
+	<label for="u_username">User Name</label><input type="text" name="u_username" value="'.$_POST['u_username'].'"/><br/>
+	<label for="u_name">Nick Name</label><input type="text" name="u_name" value="'.$_POST['u_fname'].'"/><br/>
 	<label for="u_email">e-Mail Address</label><input type="text" name="u_email" value="'.$_POST['u_email'].'"/><br/>
-	<label for="u_personalp">Personal Phone</label><input type="text" name="u_personalp" value="'.$_POST['u_personalp'].'"/><br/>
-	<label for="u_publicp">Public Phone</label><input type="text" name="u_publicp" value="'.$_POST['u_publicp'].'"/>
 	<hr/>
 	<label for="u_status">Account Status</label>
 	<select name="u_status">
 		'.$statuses.'
-	</select><br/>
-	<label for="u_primarygroup">Primary Group</label>
-	<select name="u_primarygroup">
-		'.$groupListSelect.'
-	</select><br/>
+	</select>
 	<hr/>
 	<label for="u_autopass">Auto-Generate a Password?</label><input type="checkbox" name="u_autopass" style="width: 2em;"
 	onclick="changeClass(\'passwordinput\',\'itemhide\',\'itemshowblock\');"/><br/>
@@ -127,19 +135,19 @@ $this->pageArea.= '
 	<label for="u_pass2">Password (Again)</label><input type="password" name="u_pass2" value="'.$_POST['u_pass2'].'"/>
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Create User Account" />
-	
+
 </form>
 </fieldset>
 
 ';
-	
+
 }elseif($_POST['u_submit'] == 'Edit User'){
 
 $this->breadcrumbs.=' &raquo; Edit User';
 
 if($_POST['u_uid'] == $_SESSION['loginid']){
 	$this->messageAddAlert('You are discouraged from editing your own account from this plugin.<br/>
-	If you wish to change your account settings, please use the <a href="?phylobyte=account">"My Account"</a> link. ');
+	If you wish to change your account settings, please use the "<a href="?phylobyte=account">My Account</a>" link. ');
 }
 
 $userExists = $GLOBALS['UGP']->user_get(stripslashes($_POST['u_uid']));
@@ -178,32 +186,44 @@ $statuses = '
 //list of existing groups
 $groupList = $GLOBALS['UGP']->group_get(null);
 
+$groupMemberships = $GLOBALS['UGP']->group_get(null, null, $_POST['u_uid']);
+
+$groupMembershipTemplate = '
+	<tr id="u_memberships_row_%i%" class="table_row_normal">
+	<td style="text-align: center;">
+		<input type="radio" name="u_uid" value="%mi%"
+		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'u_memberships_row_%i%\', \'table_row_normal\', \'table_row_highlight\');"
+		style="cursor: pointer;"/>
+	</td>
+	<td>%n%</td><td>%d%</td>
+	</tr>';
+
+$groupMembershipList = $GLOBALS['UGP']->group_format($groupMemberships, $groupMembershipTemplate);
+
 $groupListSelect = null;
 foreach($groupList as $groupArray){
-	if($userExists['primarygroup'] == $groupArray['id']){
-		$selector = ' selected="selected"';
-	}else{
-		$selector = '';
-	}
 	$groupListSelect.='
-	<option value="'.$groupArray['id'].'"'.$selector.'>'.$groupArray['name'].'</option>
+	<option value="'.$groupArray['id'].'">'.$groupArray['name'].'</option>
 	';
 }
-	
+
+if($groupMembershipList != ''){
+	$groupMembershipRemove = '<label for="u_submit">&nbsp;</label>
+	<input type="submit" name="u_submit" value="Remove Membership" />';
+}else{
+	$groupMembershipRemove = '<p style="text-align: center;">This user is not a member of any groups.</p>'
+}
+
+
 $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 
 <fieldset>
 	<legend>Edit User</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 	<input type="hidden" name="u_uid" value="%i%" />
-	<label for="u_name">User Name</label><input type="text" name="u_name" value="%u%"/><br/>
-	<label for="u_fname">First Name</label><input type="text" name="u_fname" value="%fn%"/><br/>
-	<label for="u_lname">Last Name</label><input type="text" name="u_lname" value="%ln%"/><br/>
+	<label for="u_username">User Name</label><input type="text" name="u_username" value="%u%"/><br/>
+	<label for="u_name">Nick Name</label><input type="text" name="u_name" value="%n%"/><br/>
 	<label for="u_email">e-Mail Address</label><input type="text" name="u_email" value="%e%"/><br/>
-	<label for="u_personalp">Personal Phone</label><input type="text" name="u_personalp" value="%p%"/><br/>
-	<label for="u_publicp">Public Phone</label><input type="text" name="u_publicp" value="%P%"/><br/>
-	<label for="u_description">Personal Description</label>
-	<textarea rows="6" name="u_description" id="p_description">%d%</textarea>
 	<hr/>
 	<label for="u_status">Account Status</label>
 	<select name="u_status">
@@ -213,15 +233,11 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 		<option value="suspended">Suspended</option>
 		<option value="flagged">Flagged</option>
 		<option value="reserved">Reserved (No password changes allowed)</option>
-	</select><br/>
-	<label for="u_primarygroup">Primary Group</label>
-	<select name="u_primarygroup">
-		'.$groupListSelect.'
-	</select><br/>
+	</select>
 	<hr/>
 	<label for="u_changepass">Change or Update Password?</label><input type="checkbox" name="u_changepass" style="width: 2em;" onclick="changeClass(\'changepassword\',\'itemhide\',\'itemshowblock\');"/><br/>
 	<span id="changepassword" class="itemhide">
-	<label for="u_autopass">Auto-Generate a New Password?</label><input type="checkbox" name="u_autopass" style="width: 2em;" 
+	<label for="u_autopass">Auto-Generate a New Password?</label><input type="checkbox" name="u_autopass" style="width: 2em;"
 	onclick="changeClass(\'passwordinput\',\'itemhide\',\'itemshowblock\');"/><br/>
 	<span class="itemshowblock" id="passwordinput">
 	<label for="u_pass1">Set New Password</label><input type="password" name="u_pass1" value=""/><br/>
@@ -229,7 +245,32 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	</span>
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Save User Details" />
+
+</form>
+</fieldset>
+
+<fieldset>
+	<legend>Group Memberships</legend>
+<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+
+	<table class="selTable">
+		<tr>
+			<th>Select</th><th>Group Name</th><th>Description</th>
+		</tr>
+		'.$groupMembershipList.'
+	</table>
+
+	'.$groupMembershipRemove.'
 	
+	<hr/>
+
+	<label for="u_group">Select Group</label>
+	<select name="u_group">
+		'.$groupListSelect.'
+	</select><br/>
+
+	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Membership" />
+
 </form>
 </fieldset>
 
@@ -248,8 +289,6 @@ $userListFormat = '
 		style="cursor: pointer;"/>
 		</td>
 		<td>%u%</td>
-		<td>%G%</td>
-		<td>%fn% %ln%</td>
 		<td>%e%</td>
 		<td style="text-align: center; font-weight: bold;"><span style="color: %sC%;">%s%</span></td>
 	</tr>
@@ -263,7 +302,7 @@ $this->pageArea.= '
 <fieldset>
 	<legend>Add New User</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
-	<label for="u_name">User Name</label><input type="text" name="u_name" value=""/><br/>
+	<label for="u_username">User Name</label><input type="text" name="u_username" value=""/><br/>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add User" />
 </form>
 </fieldset>
@@ -278,13 +317,14 @@ $this->pageArea.= '
 
 	<table class="selTable">
 		<tr>
-			<th style="width: 6em;">Select</th><th>User Name</th><th>Primary Group</th><th>Given Name</th><th>e-Mail</th><th style="width: 6em;">Status</th>
+			<th style="width: 6em;">Select</th><th>User Name</th><th>e-Mail</th><th style="width: 6em;">Status</th>
 		</tr>
 		'.$userListTable.'
 	</table>
 
 	<div style="display: block; text-align: right;">
 		<input type="submit" name="u_submit" value="Edit User" style="width: 14em;" />
+		<input type="submit" name="u_submit" value="Edit Attributes" style="width: 14em;" />
 		<input type="submit" name="u_submit" value="Delete User"  style="width: 14em;" />
 	</div>
 

@@ -66,7 +66,7 @@ class ugp{
 	 * @param Array userArray with attributes
 	 * @return boolean
 	 **/
-	function  user_put($userArray, $attributeArray){
+	function  user_put($userArray){
 
 		//if no user id is supplied, we have a certain set of requirements
 		//a user name has to be provided, and either a password or autopass
@@ -133,7 +133,6 @@ class ugp{
 			ON DUPLICATE KEY UPDATE
 			$optionalUpdate name=$name, email=$email, status=$status, username=$username;
 			";
-		phylobyte::messageAddDebug($query);
 		$query = $this->pDB->prepare($query);
 		if($query->execute()){
 			phylobyte::messageAddNotification('Successfully updated user.');
@@ -156,6 +155,13 @@ class ugp{
 
 	}
 
+	function membership_add($uid, $gid){
+
+	}
+
+	function membership_remove($mid){
+
+	}
 	
 	/**
 	 * Delete a group.
@@ -234,32 +240,52 @@ class ugp{
 	 * @param String groupID pass null and a filter to search groups
 	 * @return Array
 	 **/
-	function group_get($groupID, $groupsFilter = ''){
-		//if gruoupID, return array, otherwise return multiple array
-		if($groupID != null){
-			$group = $this->pDB->prepare("
-				SELECT *, (
-					SELECT COUNT(*)
-					FROM p_memberships
-					WHERE groupid=p_groups.id
-					) as members
-				FROM p_groups WHERE id=$groupID ORDER BY name;");
-			$group->execute();
-			$group = $group->fetchAll();
-			return $group;
-		}else{
+	function group_get($groupID, $groupsFilter = '', $user = false){
+
+		if(ctype_digit($user)){
+			//this is a little different; we need to get only the groups a user is a member of
+			$userid = $this->pDB->quote($user);
 			$groups = $this->pDB->prepare("
-				SELECT *, (
-					SELECT COUNT(*)
-					FROM p_memberships
-					WHERE groupid=p_groups.id
-					) as members
-				FROM p_groups
-				WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
+				SELECT p_memberships.id AS mid, p_groups.*, (
+						SELECT COUNT(*)
+						FROM p_memberships
+						WHERE groupid=p_groups.id
+						) AS members
+				FROM p_memberships
+				JOIN p_groups ON p_memberships.groupid = p_groups.id
+				WHERE userid=$userid;
+			");
 			$groups->execute();
 			$groups = $groups->fetchAll();
-			return $groups;
+			return $groups;	
+		}else{
+			//if gruoupID, return array, otherwise return multiple array
+			if($groupID != null){
+				$group = $this->pDB->prepare("
+					SELECT *, (
+						SELECT COUNT(*)
+						FROM p_memberships
+						WHERE groupid=p_groups.id
+						) as members
+					FROM p_groups WHERE id=$groupID ORDER BY name;");
+				$group->execute();
+				$group = $group->fetchAll();
+				return $group;
+			}else{
+				$groups = $this->pDB->prepare("
+					SELECT *, (
+						SELECT COUNT(*)
+						FROM p_memberships
+						WHERE groupid=p_groups.id
+						) as members
+					FROM p_groups
+					WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
+				$groups->execute();
+				$groups = $groups->fetchAll();
+				return $groups;
+			}
 		}
+
 	}
 
 	/**
@@ -317,6 +343,7 @@ class ugp{
 	 * %n% = name
 	 * %d% = description
 	 * %m% = members
+	 * %mi% = mid
 	 * @return String
 	 * TODO add format string for groups attributes
 	 **/
@@ -334,13 +361,15 @@ class ugp{
 				'%i%',
 				'%n%',
 				'%d%',
-				'%m%'
+				'%m%',
+				'%mi%'
 		    );
 		    $replacements = array(
 				$group['id'],
 				$group['name'],
 				$group['description'],
-				$group['members']
+				$group['members'],
+				$group['mid']
 		    );
 		    $result.=str_replace($needles, $replacements, $formatString);
 		}

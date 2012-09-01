@@ -186,12 +186,34 @@ $statuses = '
 //list of existing groups
 $groupList = $GLOBALS['UGP']->group_get(null);
 
+$groupMemberships = $GLOBALS['UGP']->group_get(null, null, $_POST['u_uid']);
+
+$groupMembershipTemplate = '
+	<tr id="u_memberships_row_%i%" class="table_row_normal">
+	<td style="text-align: center;">
+		<input type="radio" name="u_uid" value="%mi%"
+		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'u_memberships_row_%i%\', \'table_row_normal\', \'table_row_highlight\');"
+		style="cursor: pointer;"/>
+	</td>
+	<td>%n%</td><td>%d%</td>
+	</tr>';
+
+$groupMembershipList = $GLOBALS['UGP']->group_format($groupMemberships, $groupMembershipTemplate);
+
 $groupListSelect = null;
 foreach($groupList as $groupArray){
 	$groupListSelect.='
 	<option value="'.$groupArray['id'].'">'.$groupArray['name'].'</option>
 	';
 }
+
+if($groupMembershipList != ''){
+	$groupMembershipRemove = '<label for="u_submit">&nbsp;</label>
+	<input type="submit" name="u_submit" value="Remove Membership" />';
+}else{
+	$groupMembershipRemove = '<p style="text-align: center;">This user is not a member of any groups.</p>';
+}
+
 
 $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 
@@ -228,11 +250,18 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 </fieldset>
 
 <fieldset>
-	<legend>Groups</legend>
+	<legend>Group Memberships</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 
-	<p>existing groups will be listed here...</p>
+	<table class="selTable">
+		<tr>
+			<th>Select</th><th>Group Name</th><th>Description</th>
+		</tr>
+		'.$groupMembershipList.'
+	</table>
 
+	'.$groupMembershipRemove.'
+	
 	<hr/>
 
 	<label for="u_group">Select Group</label>
@@ -240,7 +269,7 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 		'.$groupListSelect.'
 	</select><br/>
 
-	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Group" />
+	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Membership" />
 
 </form>
 </fieldset>

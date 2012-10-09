@@ -1,9 +1,0 @@
-# Hidden Files and Backup files #
-#################################
-.*
-*~
-
-# Exception to .gitignore #
-###########################
-!.gitignore
-data/dbconfig.array

@@ -158,9 +158,9 @@ class ugp{
 		if(count($checkResults) > 0){
 			//great! the user is a member of the group, so let's get the attrs
 			$getAttrs = $this->pDB->prepare("
-			SELECT p_gattributes.*, p_uattributes.value, p_uattributes.id AS caid FROM p_gattributes	
-			LEFT JOIN p_uattributes ON p_uattributes.aid = p_gattributes.id
-			WHERE p_gattributes.gid=$groupid AND (p_uattributes.uid=$userid OR p_uattributes.uid IS NULL)
+			SELECT DISTINCT p_gattributes.*,
+			(SELECT value FROM p_uattributes WHERE uid=$userid AND p_uattributes.aid = p_gattributes.id) AS value
+			FROM p_gattributes, p_uattributes WHERE p_gattributes.gid=$groupid
 			");
 			$getAttrs->execute();
 			$getAttrs = $getAttrs->fetchAll();
@@ -631,7 +631,10 @@ class ugp{
 			$query = $this->pDB->prepare("
 			DELETE FROM p_gattributes WHERE id=$id;
 			");
-			if($query->execute()){
+			$query2 = $this->pDB->prepare("
+			DELETE FROM p_uattributes WHERE aid=$id;
+			");
+			if($query->execute() && $query2->execute()){
 				phylobyte::messageAddNotification('Successfully deleted attribute.');
 				return true;
 			}else{

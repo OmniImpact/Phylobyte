@@ -158,9 +158,9 @@ class ugp{
 		if(count($checkResults) > 0){
 			//great! the user is a member of the group, so let's get the attrs
 			$getAttrs = $this->pDB->prepare("
-			SELECT p_gattributes.*, p_uattributes.value, p_uattributes.id AS caid FROM p_gattributes	
-			LEFT JOIN p_uattributes ON p_uattributes.aid = p_gattributes.id
-			WHERE p_gattributes.gid=$groupid AND (p_uattributes.uid=$userid OR p_uattributes.uid IS NULL)
+			SELECT DISTINCT p_gattributes.*,
+			(SELECT value FROM p_uattributes WHERE uid=$userid AND p_uattributes.aid = p_gattributes.id) AS value
+			FROM p_gattributes, p_uattributes WHERE p_gattributes.gid=$groupid
 			");
 			$getAttrs->execute();
 			$getAttrs = $getAttrs->fetchAll();
@@ -315,7 +315,8 @@ class ugp{
 		//check deleteable
 		if($this->user_deleteable($userID)){
 			$this->pDB->exec("DELETE FROM p_users WHERE id={$_POST['u_uid']};");
-			$this->pDB->exec("DELETE FROM p_uattributes WHERE userid={$_POST['u_uid']};");
+			$this->pDB->exec("DELETE FROM p_memberships WHERE userid={$_POST['u_uid']};");
+			$this->pDB->exec("DELETE FROM p_uattributes WHERE uid={$_POST['u_uid']};");
 			phylobyte::messageAddNotification('Successfully deleted user.');
 			return true;
 		}

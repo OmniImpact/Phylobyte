@@ -53,9 +53,23 @@ if($_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Create Us
 		'autopass' => $autopass,
 		'password' => $password
 	))){
-		$_POST['u_submit'] = null;
 	};
 
+	if($_POST['u_submit'] == 'Create User Account'){
+		$_POST['u_submit'] == null;
+	}
+}
+
+if($_POST['u_submit'] == 'Add Membership'){
+	$GLOBALS['UGP']->membership_add($_POST['u_uid'], $_POST['u_group']);
+}
+
+if($_POST['u_submit'] == 'Remove Membership'){
+	$GLOBALS['UGP']->membership_remove($_POST['g_mid']);
+}
+
+if($_POST['u_submit'] == 'Set User Value' && $_POST['a_id'] != null){
+	$GLOBALS['UGP']->user_putattr($_POST['u_uid'], $_POST['a_id'], stripslashes($_POST['a_newdefault']) );
 }
 
 //a little javascript
@@ -141,7 +155,8 @@ $this->pageArea.= '
 
 ';
 
-}elseif($_POST['u_submit'] == 'Edit User'){
+}elseif(	$_POST['u_submit'] == 'Edit User' || $_POST['u_submit'] == 'Add Membership' ||
+			$_POST['u_submit'] == 'Save User Details' || $_POST['u_submit'] == 'Remove Membership'){
 
 $this->breadcrumbs.=' &raquo; Edit User';
 
@@ -184,14 +199,14 @@ $statuses = '
 ';
 
 //list of existing groups
-$groupList = $GLOBALS['UGP']->group_get(null);
+$groupList = $GLOBALS['UGP']->group_get(null, null, $_POST['u_uid'], true);
 
 $groupMemberships = $GLOBALS['UGP']->group_get(null, null, $_POST['u_uid']);
 
 $groupMembershipTemplate = '
 	<tr id="u_memberships_row_%i%" class="table_row_normal">
 	<td style="text-align: center;">
-		<input type="radio" name="u_uid" value="%mi%"
+		<input type="radio" name="g_mid" value="%mi%"
 		onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'u_memberships_row_%i%\', \'table_row_normal\', \'table_row_highlight\');"
 		style="cursor: pointer;"/>
 	</td>
@@ -211,7 +226,7 @@ if($groupMembershipList != ''){
 	$groupMembershipRemove = '<label for="u_submit">&nbsp;</label>
 	<input type="submit" name="u_submit" value="Remove Membership" />';
 }else{
-	$groupMembershipRemove = '<p style="text-align: center;">This user is not a member of any groups.</p>'
+	$groupMembershipRemove = '<p style="text-align: center;">This user is not a member of any groups.</p>';
 }
 
 
@@ -221,6 +236,9 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	<legend>Edit User</legend>
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 	<input type="hidden" name="u_uid" value="%i%" />
+
+	<h3>User Details</h3>
+	
 	<label for="u_username">User Name</label><input type="text" name="u_username" value="%u%"/><br/>
 	<label for="u_name">Nick Name</label><input type="text" name="u_name" value="%n%"/><br/>
 	<label for="u_email">e-Mail Address</label><input type="text" name="u_email" value="%e%"/><br/>
@@ -245,13 +263,9 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	</span>
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Save User Details" />
+	<label for="u_done">&nbsp;</label><input type="submit" name="u_done" value="Done Editing User" />
 
-</form>
-</fieldset>
-
-<fieldset>
-	<legend>Group Memberships</legend>
-<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+	<h3 style="margin-top: 2em;">Group Memberships</h3>
 
 	<table class="selTable">
 		<tr>
@@ -275,6 +289,75 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 </fieldset>
 
 ');
+
+}elseif($_POST['u_submit'] == 'Edit Attributes' || $_POST['u_submit'] == 'Set User Value'){
+
+$this->breadcrumbs.=' &raquo; Edit Attributes';
+
+$groupMemberships = $GLOBALS['UGP']->group_get(null, null, $_POST['u_uid']);
+
+foreach($groupMemberships as $groupMembership) {
+
+	$attributes = $GLOBALS['UGP']->user_getattrs($_POST['u_uid'], $groupMembership['id']);
+
+	if($attributes == false){
+		$this->pageArea.= '
+
+		<fieldset>
+			<legend>Edit User Attributes for Group "'.$groupMembership['name'].'"</legend>
+		<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+			<h3 style="text-align: center;">This group has no attributes to edit.</h3>
+			<div style="display: block; text-align: right;">
+			<input type="submit" name="u_done" value="Done Editing Attributes" style="width: 14em;"/>
+			</div>
+		</form>
+		</fieldset>
+
+		';
+	}else{
+
+		$attributesTable = null;
+		foreach($attributes as $attribute) {
+		    $attributesTable.= '
+				<tr id="u_table_row_'.$attribute['id'].'" class="table_row_normal">
+					<td style="text-align: center;">
+						<input type="radio" name="a_id" value="'.$attribute['id'].'"
+						onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'u_table_row_'.$attribute['id'].'\', \'table_row_normal\', \'table_row_highlight\');"
+						style="cursor: pointer;"/>
+					</td>
+					<td>'.$attribute['attribute'].'</td>
+					<td>'.$attribute['defaultvalue'].'</td>
+					<td>'.$attribute['value'].'</td>
+				</tr>
+		    ';
+		}
+	
+		$this->pageArea.= '
+
+		<fieldset>
+			<legend>Edit User Attributes for Group "'.$groupMembership['name'].'"</legend>
+		<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+		<input type="hidden" name="u_uid" value="'.stripslashes($_POST['u_uid']).'" />
+			<table class="selTable">
+				<tr>
+					<th style="width: 6em;">Select</th><th style="width: 6em;">Attribute</th><th>Default Value</th><th>User Value</th>
+				</tr>
+			'.$attributesTable.'
+			</table>
+			<div style="display: block; text-align: right;">
+			<label for="a_newdefault">New User Value</label><input type="text" name="a_newdefault" value=""/><br/>
+			<input type="submit" name="u_submit" value="Set User Value" style="width: 14em;"/>
+			<input type="submit" name="u_done" value="Done Editing Attributes" style="width: 14em;"/>
+			</div>
+		</form>
+		</fieldset>
+
+		';
+	}
+}
+
+
+
 
 }else{
 

@@ -85,7 +85,7 @@ $this->pageArea = '
 
 <fieldset style="float: right; '.$GLOBALS['MS']->mobileReturn('width: 90%; margin-right: 5%;', 'width: 40%; margin-right: 15%;').'">
 	<legend>Log In</legend>
-<form action="?" method="POST" style="border-bottom: none; padding-bottom: 0;">
+<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST" style="border-bottom: none; padding-bottom: 0;">
 	<label for="p_username">User Name</label><input type="text" name="p_username" value="'.$currentUserName.'" id="defaultInput"/><br/>
 	<label for="p_password">Password</label><input type="password" name="p_password" value="'.$currentPassword.'"/><br/>
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Submit Form" />

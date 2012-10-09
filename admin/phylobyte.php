@@ -296,7 +296,7 @@ class phylobyte{
 					<ul style="float: right; min-width: 100%;">
 						<li><a href="?phylobyte=account">My Account</a></li>
 						<li><a href="?phylobyte=settings">Settings</a></li>
-						<li><a href="?phylobyte=logout">Log Out</a></li>
+						<li><a href="?'.$_SERVER['QUERY_STRING'].'&amp;phylobyte=logout">Log Out</a></li>
 					</ul>
 				</li>
 			</ul>

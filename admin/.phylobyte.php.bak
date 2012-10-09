@@ -2,8 +2,6 @@
 
 class phylobyte{
 
-	static $messageStampBase;
-	static $messageStampItr = 0;
 	static $messageArea;
 	static $navigationArea;
 	static $mobileNav;
@@ -20,12 +18,14 @@ class phylobyte{
 	static $phylobyteDB;
 
 	function __construct(){
-		$this->messageStampBase = time();
+		$GLOBALS['MESSAGESTAMPBASE'] = microtime(true);
 		try{
 			if(count($_SESSION['dbinfo']) < 2){
 				if(is_file('../data/dbconfig.array')){
 					$_SESSION['dbinfo'] = unserialize(file_get_contents('../data/dbconfig.array'));
 				}else{
+					session_destroy();
+					session_start();
 					include('dbsetup.php');
 					if(is_file('../data/dbconfig.array')){
 						$_SESSION['dbinfo'] = unserialize(file_get_contents('../data/dbconfig.array'));
@@ -46,15 +46,15 @@ class phylobyte{
 				}
 			}elseif($this->sessionDbInfo['dbt'] == 'PostgreSQL'){
 				try{
-					$this->phylobyteDB = new PDO("pgsql:dbname=$this->sessionDbInfo['dbn'];host=$this->sessionDbInfo['dbh']", $this->sessionDbInfo['dbu'], $this->sessionDbInfo['dbp']);
+					$this->phylobyteDB = new PDO("pgsql:dbname={$this->sessionDbInfo['dbn']};host={$this->sessionDbInfo['dbh']}", $this->sessionDbInfo['dbu'], $this->sessionDbInfo['dbp']);
 				}catch(PDOException $e){
 					$this->messageAddDebug('Failed to open database: '.$e);
 				}
 			}elseif($this->sessionDbInfo['dbt'] == 'Sequel Server'){
 				try{
-					$sysinfo = posix_uname();
-					$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
-					$this->phylobyteDB = new PDO("odbc:Driver=$sequelServerDriver;Server=$this->sessionDbInfo['dbh'];Database=$this->sessionDbInfo['dbn']; Uid=$this->sessionDbInfo['dbu'];Pwd=$this->sessionDbInfo['dbp'];");
+					//$sysinfo = posix_uname();
+					//$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
+					$this->phylobyteDB = new PDO("odbc:Driver={SQL Server};Server={$this->sessionDbInfo['dbh']};Database={$this->sessionDbInfo['dbn']}; Uid={$this->sessionDbInfo['dbu']};Pwd={$this->sessionDbInfo['dbp']};");
 				}catch(PDOException $e){
 					$this->messageAddDebug('Failed to open database: '.$e);
 				}
@@ -64,6 +64,69 @@ class phylobyte{
 			$this->messageAddDebug('Failed to connect to the database.');
 		}
 		try{
+		if($this->sessionDbInfo['dbt'] == 'Sequel Server'){
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_groups')
+			CREATE TABLE p_groups (
+				id INTEGER PRIMARY KEY IDENTITY,
+				name TEXT,
+				description TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_users')
+			CREATE TABLE p_users (
+				id INTEGER PRIMARY KEY IDENTITY,
+				username TEXT,
+				password TEXT,
+				passwordtype TEXT,
+				status TEXT,
+				statusvalue TEXT,
+				super TEXT,
+				email TEXT,
+				primarygroup TEXT,
+				passwordhash TEXT,
+				fname TEXT,
+				lname TEXT,
+				personalphone TEXT,
+				publicphone TEXT,
+				description TEXT,
+				registered TEXT,
+				lastlogin TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_userinfo')
+			CREATE TABLE p_userinfo (
+				id INTEGER PRIMARY KEY IDENTITY,
+				uid TEXT,
+				fname TEXT,
+				mname TEXT,
+				lname TEXT,
+				nickname TEXT,
+				email TEXT,
+				personalnum TEXT,
+				publicnum TEXT,
+				description TEXT,
+				joindate TEXT,
+				lastused TEXT,
+				adminnote TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_memberships')
+			CREATE TABLE p_memberships (
+				id INTEGER PRIMARY KEY IDENTITY,
+				userid TEXT,
+				groupid TEXT,
+				lastused TEXT,
+				joined TEXT
+			);");
+			$this->phylobyteDB->exec("
+			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_plugins')
+			CREATE TABLE p_plugins (
+				id INTEGER PRIMARY KEY IDENTITY,
+				groupid TEXT,
+				pluginname TEXT
+			);");
+		}else{
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_groups(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -74,36 +137,26 @@ class phylobyte{
 				CREATE TABLE IF NOT EXISTS p_users(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
 					username TEXT,
-					password TEXT,
-					passwordtype TEXT,
+					name TEXT,
+					passwordhash TEXT,
 					status TEXT,
 					statusvalue TEXT,
 					super TEXT,
-					email TEXT,
-					primarygroup TEXT,
-					passwordhash TEXT,
-					fname TEXT,
-					lname TEXT,
-					personalphone TEXT,
-					publicphone TEXT,
-					description TEXT
+					email TEXT
 				);");
-				//soon i will delete everything after statusvalue
 			$this->phylobyteDB->exec("
-				CREATE TABLE IF NOT EXISTS p_userinfo(
+				CREATE TABLE IF NOT EXISTS p_gattributes(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					gid TEXT,
+					attribute TEXT,
+					defaultvalue TEXT
+				);");
+			$this->phylobyteDB->exec("
+				CREATE TABLE IF NOT EXISTS p_uattributes(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
 					uid TEXT,
-					fname TEXT,
-					mname TEXT,
-					lname TEXT,
-					nickname TEXT,
-					email TEXT,
-					personalnum TEXT,
-					publicnum TEXT,
-					description TEXT,
-					joindate TEXT,
-					lastused TEXT,
-					adminnote TEXT
+					aid TEXT,
+					value TEXT
 				);");
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_memberships(
@@ -119,6 +172,7 @@ class phylobyte{
 					groupid TEXT,
 					pluginname TEXT
 				);");
+		}
 			$getRows = $this->phylobyteDB->prepare("SELECT COUNT(*) FROM p_groups");
 			$getRows->execute();
 			$numRows = $getRows->fetchAll();
@@ -126,8 +180,13 @@ class phylobyte{
 			if($this->phylobyteDB->exec("
 				INSERT INTO p_groups (name, description)
 				VALUES ('admin', 'Phylobyte default administrator group');") &&
-				$this->phylobyteDB->exec("INSERT INTO p_users (username, status, primarygroup, fname)
-				VALUES ('admin', 'override', '1', 'Administrator');")){
+				$this->phylobyteDB->exec("
+				INSERT INTO p_users (username, status, name)
+				VALUES ('admin', 'override', 'Administrator');") &&
+				$this->phylobyteDB->exec("
+				INSERT INTO p_memberships (userid, groupid)
+				VALUES ('1', '1');")
+				){
 					$this->messageAddDebug('Initialized Phylobyte User Tables');
 				}
 			}
@@ -143,8 +202,8 @@ class phylobyte{
 
 	function messageStamp(){
 		$GLOBALS['MESSAGESTAMPITR']++;
-		//this needs to use messagestampbase, and not the time directly
-		return time().':'.$GLOBALS['MESSAGESTAMPITR']++;
+		//this needs to use messageStampBase, and not the time directly
+		return $GLOBALS['MESSAGESTAMPBASE'].':'.$GLOBALS['MESSAGESTAMPITR']++;
 	}
 
 	function login(){
@@ -233,7 +292,7 @@ class phylobyte{
 				<li>
 					<a href="../">View Website</a>
 				</li>
-				<li><a style="min-width: 10em; text-align: center;">Welcome, '.$this->sessionUserInfo['fname'].' '.$this->sessionUserInfo['lname'].'</a>
+				<li><a style="min-width: 10em; text-align: center;">Welcome, '.$this->sessionUserInfo['name'].' '.$this->sessionUserInfo['lname'].'</a>
 					<ul style="float: right; min-width: 100%;">
 						<li><a href="?phylobyte=account">My Account</a></li>
 						<li><a href="?phylobyte=settings">Settings</a></li>
@@ -380,7 +439,7 @@ class phylobyte{
 	}
 	
 	function build_finish(){
-		$this->messageArea = $GLOBALS['MESSAGES']->pullquery('%v%', "SELECT * FROM __REGISTRY____pmessages WHERE mykey LIKE '{$this->messageStampBase}%';");
+		$this->messageArea = $GLOBALS['MESSAGES']->pullquery('%v%', "SELECT * FROM __REGISTRY____pmessages WHERE mykey LIKE '{$GLOBALS['MESSAGESTAMPBASE']}%';");
 		$this->messageArea = str_replace('#e.', '<div class="error">', $this->messageArea);
 		$this->messageArea = str_replace('#a.', '<div class="alert">', $this->messageArea);
 		$this->messageArea = str_replace('#n.', '<div class="notification">', $this->messageArea);

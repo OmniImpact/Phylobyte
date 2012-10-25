@@ -1,0 +1,1 @@
+Add, Delete, and Manage Images for your Website

@@ -1,0 +1,46 @@
+.equatec_home_header, .equatec_home_header u{
+	font-size: 15pt;
+}
+
+.equatec_table{
+	width: 100%;
+	border-collapse: collapse;
+	border: 1px solid silver;
+	margin-bottom: 1em;
+}
+
+.equatec_table th{
+	background-color: #eee;
+	border-bottom: 1px solid silver;
+	padding: 2pt;
+}
+
+.equatec_table td{
+	padding: 2pt;
+	border-left: 1px solid silver;
+	border-bottom: 1px solid silver;
+}
+
+.equatec_table .select{
+	text-align: center;
+}
+.equatec_table .select a{
+	font-size: 80%;
+	color: #050;
+}
+
+.equatec_table .edit{
+	text-align: center;
+}
+.equatec_table .edit a{
+	font-size: 80%;
+	color: #530;
+}
+
+.equatec_table .delete{
+	text-align: center;
+}
+.equatec_table .delete a{
+	font-size: 80%;
+	color: #800;
+}

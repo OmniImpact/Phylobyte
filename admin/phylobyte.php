@@ -14,10 +14,14 @@ class phylobyte{
 	
 	static $sessionUserInfo;
 	static $sessionDbInfo;
+
+	static $directMessages = false;
 	
 	static $phylobyteDB;
 
 	function __construct(){
+
+		$this->pageTitle = 'Phylobyte CMS';
 		$GLOBALS['MESSAGESTAMPBASE'] = microtime(true);
 		try{
 			if(count($_SESSION['dbinfo']) < 2){
@@ -193,7 +197,6 @@ class phylobyte{
 		}catch(PDOException $e){
 			echo($e);
 		}
-		$this->pageTitle = 'Phylobyte CMS';
 		if($this->login()){
 			$this->pageBuild();
 			$this->navBuild();
@@ -272,7 +275,7 @@ class phylobyte{
 							$this->navigationArea.='&hellip;</a>';
 							$this->navigationArea.='<ul>';
 							foreach($functionsArray as $function) {
-							    $this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.$function.'">'.trim(preg_replace('#^\d+#', '', $function)).'</a></li>';
+							    $this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.str_replace('&', '%26', $function).'">'.trim(preg_replace('#^\d+#', '', $function)).'</a></li>';
 							}
 							$this->navigationArea.='</ul>';
 						}else{
@@ -286,6 +289,11 @@ class phylobyte{
 		}
 		
 		if(!$MS->useMobile()){
+			if($_SERVER['QUERY_STRING'] == ''){
+				$logoutQueryString = '?phylobyte=logout';
+			}else{
+				$logoutQueryString = '?'.$_SERVER['QUERY_STRING'].'&phylobyte=logout';
+			}
 			$this->navigationArea.='
 			</ul>
 			<ul style="float: right;">
@@ -296,7 +304,7 @@ class phylobyte{
 					<ul style="float: right; min-width: 100%;">
 						<li><a href="?phylobyte=account">My Account</a></li>
 						<li><a href="?phylobyte=settings">Settings</a></li>
-						<li><a href="?'.$_SERVER['QUERY_STRING'].'&amp;phylobyte=logout">Log Out</a></li>
+						<li><a href="'.$logoutQueryString.'">Log Out</a></li>
 					</ul>
 				</li>
 			</ul>
@@ -348,7 +356,7 @@ class phylobyte{
 			foreach($this->pluginFunctions as $function){
 				$functionName = substr(trim(preg_replace('#^\d+#', '', stripslashes($function))), 0, -4);
 
-				$item = str_replace('%F%', substr($function, 0, -4), $return);
+				$item = str_replace('%F%', str_replace('&', '%26',substr($function, 0, -4)), $return);
 				$item = str_replace('%Fn%', $functionName, $item);
 				if(is_file('../plugins/'.stripslashes($_GET['plugin']).'.on/'.substr($function, 0, -3).'dsc')){
 					$item = str_replace('%Fd%', stripslashes(file_get_contents('../plugins/'.stripslashes($_GET['plugin']).'.on/'.substr($function, 0, -3).'dsc')),$item);
@@ -418,7 +426,7 @@ class phylobyte{
 				//we include the function
 				$function = stripslashes($_GET['function']);
 				$this->pageTitle.=' | '.trim(preg_replace('#^\d+#', '', $function));
-				$this->breadcrumbs.=' &raquo; <a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.$function.'">'.trim(preg_replace('#^\d+#', '', $function)).'</a>';
+				$this->breadcrumbs.=' &raquo; <a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.str_replace('&', '%26', $function).'">'.trim(preg_replace('#^\d+#', '', $function)).'</a>';
 				
 				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.php')){
 					$includeFunction = '../plugins/'.$pluginDir.'/'.$function.'.php';
@@ -439,7 +447,9 @@ class phylobyte{
 	}
 	
 	function build_finish(){
-		$this->messageArea = $GLOBALS['MESSAGES']->pullquery('%v%', "SELECT * FROM __REGISTRY____pmessages WHERE mykey LIKE '{$GLOBALS['MESSAGESTAMPBASE']}%';");
+		if($this->directMessages != true){
+			$this->messageArea = $GLOBALS['MESSAGES']->pullquery('%v%', "SELECT * FROM __REGISTRY____pmessages WHERE mykey LIKE '{$GLOBALS['MESSAGESTAMPBASE']}%';");
+		}
 		$this->messageArea = str_replace('#e.', '<div class="error">', $this->messageArea);
 		$this->messageArea = str_replace('#a.', '<div class="alert">', $this->messageArea);
 		$this->messageArea = str_replace('#n.', '<div class="notification">', $this->messageArea);

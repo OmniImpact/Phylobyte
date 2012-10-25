@@ -110,7 +110,7 @@ bkLib.onDomLoaded(function() {
 	<label for="p_name">Nick Name</label><input type="text" name="p_name" value="'.$this->sessionUserInfo['name'].'"/><br/>
 	<label for="p_email">eMail Address</label><input type="text" name="p_email" value="'.$this->sessionUserInfo['email'].'"/><br/>
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Save Account Details" />
-	
+		<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
 
@@ -122,6 +122,7 @@ bkLib.onDomLoaded(function() {
 	<label for="p_password1">Password</label><input type="password" name="p_password1" value=""/><br/>
 	<label for="p_password2">Password (again)</label><input type="password" name="p_password2" value=""/><br/>
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Save Login Details" />
+		<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
 ';

@@ -264,6 +264,7 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Save User Details" />
 	<label for="u_done">&nbsp;</label><input type="submit" name="u_done" value="Done Editing User" />
+		<div class="ff">&nbsp;</div>
 
 	<h3 style="margin-top: 2em;">Group Memberships</h3>
 
@@ -284,6 +285,7 @@ $this->pageArea.= $GLOBALS['UGP']->user_format($userExists, '
 	</select><br/>
 
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add Membership" />
+	<div class="ff">&nbsp;</div>
 
 </form>
 </fieldset>
@@ -310,6 +312,7 @@ foreach($groupMemberships as $groupMembership) {
 			<div style="display: block; text-align: right;">
 			<input type="submit" name="u_done" value="Done Editing Attributes" style="width: 14em;"/>
 			</div>
+			<div class="ff">&nbsp;</div>
 		</form>
 		</fieldset>
 
@@ -349,6 +352,7 @@ foreach($groupMemberships as $groupMembership) {
 			<input type="submit" name="u_submit" value="Set User Value" style="width: 14em;"/>
 			<input type="submit" name="u_done" value="Done Editing Attributes" style="width: 14em;"/>
 			</div>
+			<div class="ff">&nbsp;</div>
 		</form>
 		</fieldset>
 
@@ -387,6 +391,7 @@ $this->pageArea.= '
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 	<label for="u_username">User Name</label><input type="text" name="u_username" value=""/><br/>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Add User" />
+		<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
 
@@ -406,11 +411,11 @@ $this->pageArea.= '
 	</table>
 
 	<div style="display: block; text-align: right;">
-		<input type="submit" name="u_submit" value="Edit User" style="width: 14em;" />
-		<input type="submit" name="u_submit" value="Edit Attributes" style="width: 14em;" />
-		<input type="submit" name="u_submit" value="Delete User"  style="width: 14em;" />
+		<input type="submit" name="u_submit" value="Edit User" style="margin-right: 1em;" />
+		<input type="submit" name="u_submit" value="Edit Attributes" style="margin-right: 1em;" />
+		<input type="submit" name="u_submit" value="Delete User"  style="margin-right: 1em;" />
 	</div>
-
+		<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
 

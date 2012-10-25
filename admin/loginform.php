@@ -75,6 +75,12 @@ Log in to Phylobyte using the form to the left. If you do not know your log in i
 The "Messages" slider, called the "Message Pile" contains often useful feedback based on your current actions. The drawer will show whenever there are messages, and will automatically roll up after three seconds. To open and close the drawer to either read messages or make extra space to work, click the tab.
 </p>';
 
+if($_GET['phylobyte'] == 'logout'){
+	$queryString = '?';
+}else{
+	$queryString = '?'.$_SERVER['QUERY_STRING'];
+}
+
 $this->pageArea = '
 <img src="gfx/logo_color_md.png" style="max-width: 100%;"/>
 <div style="float: right; width: 80%;">
@@ -85,16 +91,17 @@ $this->pageArea = '
 
 <fieldset style="float: right; '.$GLOBALS['MS']->mobileReturn('width: 90%; margin-right: 5%;', 'width: 40%; margin-right: 15%;').'">
 	<legend>Log In</legend>
-<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST" style="border-bottom: none; padding-bottom: 0;">
+<form action="'.$queryString.'" method="POST" style="border-bottom: none; padding-bottom: 0;">
 	<label for="p_username">User Name</label><input type="text" name="p_username" value="'.$currentUserName.'" id="defaultInput"/><br/>
 	<label for="p_password">Password</label><input type="password" name="p_password" value="'.$currentPassword.'"/><br/>
-	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Submit Form" />
+	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Log In" />
 	<script type="text/javascript">
 	 document.getElementById (\'defaultInput\').focus();
 	</script>
 </form>
 <form action="../" method="POST" style="border-top: none; padding-top: 0;">
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Return to Website" />
+	<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
 ';

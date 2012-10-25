@@ -158,9 +158,9 @@ class ugp{
 		if(count($checkResults) > 0){
 			//great! the user is a member of the group, so let's get the attrs
 			$getAttrs = $this->pDB->prepare("
-			SELECT DISTINCT p_gattributes.*,
+			SELECT p_gattributes.*,
 			(SELECT value FROM p_uattributes WHERE uid=$userid AND p_uattributes.aid = p_gattributes.id) AS value
-			FROM p_gattributes, p_uattributes WHERE p_gattributes.gid=$groupid
+			FROM p_gattributes WHERE p_gattributes.gid=$groupid
 			");
 			$getAttrs->execute();
 			$getAttrs = $getAttrs->fetchAll();
@@ -286,20 +286,21 @@ class ugp{
 
 		$delete = $this->group_deleteable($groupID);
 		if($delete === true){
-			$this->pDB->quote($groupID);
-			if($this->pDB->exec("
+			$groupID = $this->pDB->quote($groupID);
+			$success = true;
+			if(!$this->pDB->exec("
 				DELETE FROM p_groups
-				WHERE id=$groupID;") &&
-				$this->pDB->exec("
+				WHERE id=$groupID;")){$success = false; phylobyte::messageAddError('Error deleting group.');}
+			if(!$this->pDB->exec("
 				DELETE FROM p_uattributes
 				WHERE aid=ANY(
 					SELECT id FROM p_gattributes
 					WHERE gid=$groupID
-				);") &&
-				$this->pDB->exec("
+				);")){phylobyte::messageAddAlert('No user attributes to clear.');}
+			if(!$this->pDB->exec("
 				DELETE FROM p_gattributes
-				WHERE gid=$groupID;")
-			){ phylobyte::messageAddNotification('Successfully deleted group.'); }
+				WHERE gid=$groupID;")){phylobyte::messageAddAlert('No group attributes to clear.');}
+			if($success){ phylobyte::messageAddNotification('Successfully deleted group.'); }
 		}else{
 			phylobyte::messageAddError('The group '.$groupID.' could not be deleted: '.$delete);
 		}

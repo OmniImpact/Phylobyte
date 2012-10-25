@@ -69,6 +69,7 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 		<label for="g_desc">Description</label><input type="text" name="g_desc" value="%d%"/><br/>
 		<label for="g_submit">&nbsp;</label><input type="submit" name="g_submit" value="Save Group" />
 		<label for="g_cancel">&nbsp;</label><input type="submit" name="g_cancel" value="Cancel Editing" />
+			<div class="ff">&nbsp;</div>
 	</form>
 	</fieldset>
 	';
@@ -105,6 +106,7 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 		<div style="display: block; text-align: right;">
 			<input type="submit" name="g_submit" value="Delete Attribute"  style="width: 14em;" />
 		</div>
+			<div class="ff">&nbsp;</div>
 
 	</form>
 	</fieldset>
@@ -139,6 +141,7 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 		<label for="g_name">Group Name</label><input type="text" name="g_name" value=""/><br/>
 		<label for="g_desc">Description</label><input type="text" name="g_desc" value=""/><br/>
 		<label for="g_submit">&nbsp;</label><input type="submit" name="g_submit" value="Add Group" />
+			<div class="ff">&nbsp;</div>
 	</form>
 	</fieldset>
 
@@ -155,8 +158,9 @@ if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
 
 		<div style="display: block; text-align: right;">
 			<input type="hidden" name="g_action" value="edit" />
-			<input type="submit" name="g_submit" value="Edit Group" style="width: 14em;" />
-			<input type="submit" name="g_submit" value="Delete Group"  style="width: 14em;" />
+			<input type="submit" name="g_submit" value="Edit Group" style="margin-right: 1em;" />
+			<input type="submit" name="g_submit" value="Delete Group"  style="margin-right: 1em;" />
+			<div class="ff">&nbsp;</div>
 		</div>
 
 	</form>

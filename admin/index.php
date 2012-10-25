@@ -4,7 +4,7 @@ include('../plugins/phylobyte_tr.php');
 $GLOBALS['MESSAGES'] = new tinyRegistry;
 $GLOBALS['MESSAGES']->open('__pmessages');
 include('phylobyte.php');
-include('oi_mobilesupport.php');
+include('../plugins/oi_mobilesupport.php');
 $MS = new oi_mobilesupport;
 $GLOBALS['MS'] = $MS;
 $GLOBALS['PHYLOBYTE'] = new phylobyte;
@@ -110,7 +110,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 
 <div style="float: none; clear: both; height: 0; overflow: hidden;">&nbsp;</div>
 <div class="footer">
-	Phylobyte is &copy;2011 Daniel S. Marcus / <a href="http://omniimpact.com/">Omni Impact</a> under terms of the <a href="http://www.gnu.org/copyleft/gpl.html">GNU/GPL v3</a> | <?php $MS->mobileToggle(); ?>
+	Phylobyte is &copy;2011 Daniel S. Marcus / <a href="http://omniimpact.com/">Omni Impact</a> under terms of the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> | <?php $MS->mobileToggle(); ?>
 </div>
 
 </body>

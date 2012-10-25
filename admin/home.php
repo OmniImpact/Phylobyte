@@ -7,7 +7,7 @@ $this->pageArea = '
 <h3 style="float: left;">
 <img src="gfx/logo_color_md.png" style="max-width: 100%;"/><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Phylobyte Version 0.5 (Beta)</h3>
+Phylobyte Version 0.7 (Beta)</h3>
 
 <div style="float: right; width: 30%; text-align: center; min-width: 20em;">
 	<h2>Love your website.<br/>

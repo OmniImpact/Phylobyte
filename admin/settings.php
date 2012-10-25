@@ -243,7 +243,7 @@ $this->pageArea.='
 	<label for="p_dbp">Password</label><input type="password" name="p_dbp" value="'.$this->sessionDbInfo['dbp'].'"/><br/>
 
 		<input type="submit" name="db_submit" value="Save Configuration" style="width: 14em; margin-left: 70%;" />
-
+		<div class="ff">&nbsp;</div>
 	</form>
 	
 </fieldset>

@@ -71,6 +71,7 @@ $this->pageArea = '
 	<label for="p_password1">Password</label><input type="password" name="p_password1" value=""/><br/>
 	<label for="p_password2">Password (again)</label><input type="password" name="p_password2" value=""/><br/>
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Save Account Information" />
+	<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
 ';

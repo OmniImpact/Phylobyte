@@ -5,8 +5,8 @@
 
 # Exception to .gitignore #
 ###########################
-!.gitignore
-data/dbconfig.array
+#!.gitignore
+dbconfig.array
 .directory
 *.bak
 *.kdev4

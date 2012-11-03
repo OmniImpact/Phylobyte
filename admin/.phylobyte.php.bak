@@ -267,7 +267,7 @@ class phylobyte{
 						$currentPluginDirArray = scandir('../plugins/'.$pluginDir);
 						$functionsArray = null;
 						foreach($currentPluginDirArray as $possibleFunction) {
-							if(substr($possibleFunction, -4) == '.php' && $possibleFunction != $pluginName.'.php'){
+							if(substr($possibleFunction, -4) == '.php' && $possibleFunction != $pluginName.'.php' && $possibleFunction != strtolower($pluginName).'.php'){
 								$functionsArray[] = substr($possibleFunction, 0, -4);
 							}
 						}
@@ -344,7 +344,8 @@ class phylobyte{
 		
 		foreach($pluginDirArray as $possibleFunction) {
 			if(substr($possibleFunction, -4) == '.php' 
-			&& $possibleFunction != $pluginName.'.php'){
+			&& $possibleFunction != $pluginName.'.php'
+			&& $possibleFunction != strtolower($pluginName).'.php'){
 				$this->pluginFunctions[] = $possibleFunction;
 			}
 		}

@@ -60,7 +60,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 		<?php echo $PHYLOBYTE->messageArea;?>
 	</div>
 	<div class="messageboxtab" id="messageboxtab">
-	&nbsp; Message Pile &nbsp;<span style="font-family: 'Entypo'; font-size: 160%;">&#59215;</span>&nbsp;
+	&nbsp; Message Pile &nbsp;<span style="font-family: 'Entypo'; font-size: 150%;">&#59215;</span>&nbsp;
 	</div>
 	<script type="text/javascript">
 	$('messagebox').set('styles', {

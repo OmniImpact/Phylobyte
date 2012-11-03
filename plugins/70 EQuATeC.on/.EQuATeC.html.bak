@@ -1,0 +1,42 @@
+<h3>
+<strong>
+<u>E</u>asy<br/>
+<u>Qu</u>ality<br/>
+<u>A</u>ssurance<br/>
+<u>Te</u>sting<br/>
+<u>C</u>enter
+</strong>
+</h3>
+
+<p>
+Equatec is a simple tool to help test your product.
+</p>
+
+<p><strong>Projects</strong><br/>
+You can create multiple projects to track.
+Each project contains features and test cases.
+</p>
+
+<p><strong>Features</strong><br/>
+Within a project, add a feature to start testing.
+With each feature, you will be able to define test cases.
+When you perform a test, the results are tallied, and
+the resulting rating is applied to that feature.
+</p>
+
+<p><strong>Cases</strong><br/>
+In order to create a test, create cases.
+Describe what you expect to happen when the test is performed.
+</p>
+
+<p><strong>Submitting Results</strong><br/>
+To submit results, you will enter the outcomes of the test cases.
+You may provide a note about what actually happened, and whether
+the case failed or passed. Pass/Fail results count towards the resulting rating.
+</p>
+
+<p><strong>Viewing Results</strong><br/>
+EQuATeC keeps a record of tests, not just the latest.
+Viewing results will show a breakdown of the submitted tests
+so that you can track the progress of that feature.
+</p>

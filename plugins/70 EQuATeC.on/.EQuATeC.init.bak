@@ -1,0 +1,90 @@
+<?php
+
+class equatec{
+
+	static $pDB;
+
+	function __construct(){
+		$this->pDB = $GLOBALS['PHYLOBYTEDB'];
+
+		$this->pDB->exec("
+				CREATE TABLE IF NOT EXISTS equatec_projects(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					name TEXT,
+					description TEXT
+				);");
+		$this->pDB->exec("
+				CREATE TABLE IF NOT EXISTS equatec_features(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					project_id TEXT,
+					name TEXT,
+					description TEXT
+				);");
+		$this->pDB->exec("
+				CREATE TABLE IF NOT EXISTS equatec_cases(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					feature_id TEXT,
+					name TEXT,
+					description TEXT,
+					type TEXT
+				);");
+
+		$this->pDB->exec("
+				CREATE TABLE IF NOT EXISTS equatec_results(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					feature_id TEXT,
+					timestamp TEXT,
+					data TEXT,
+					result TEXT,
+					user TEXT
+				);");
+	}
+
+	function projects_get(){
+		$projects_get = $this->pDB->prepare("SELECT * FROM equatec_projects");
+		$projects_get->execute();
+		$projects_get = $projects_get->fetchAll();
+		return $projects_get;
+	}
+
+	function project_get($id){
+		$id = $this->pDB->quote($id);
+		$project_get = $this->pDB->prepare("SELECT * FROM equatec_projects WHERE id=$id;");
+		$project_get->execute();
+		$project_get = $project_get->fetchAll();
+		return $project_get;
+	}
+
+	function project_put($name, $description){
+		$name = $this->pDB->quote($name);
+		$description = $this->pDB->quote($description);
+
+		$project_put = $this->pDB->prepare("INSERT INTO equatec_projects (name, description) VALUES ($name, $description);");
+		if($project_put->execute()){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	function features_get($projectId){
+		$projectId = $this->pDB->quote($projectId);
+		$features_get = $this->pDB->prepare("SELECT * FROM equatec_features WHERE project_id=$projectId");
+		$features_get->execute();
+		$features_get = $features_get->fetchAll();
+		return $features_get;
+	}
+
+	function feature_get($id){
+		$id = $this->pDB->quote($id);
+		$feature_get = $this->pDB->prepare("SELECT * FROM equatec_features WHERE id=$id;");
+		$feature_get->execute();
+		$feature_get = $feature_get->fetchAll();
+		return $feature_get;
+	}
+
+}
+
+$GLOBALS['EQUATEC'] = new equatec;
+
+?>

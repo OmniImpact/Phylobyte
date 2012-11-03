@@ -149,7 +149,7 @@ $this->pageArea.= '
 	<label for="u_pass2">Password (Again)</label><input type="password" name="u_pass2" value="'.$_POST['u_pass2'].'"/>
 	</span>
 	<label for="u_submit">&nbsp;</label><input type="submit" name="u_submit" value="Create User Account" />
-	<div class="ff">&nbsp;</div>
+
 </form>
 </fieldset>
 

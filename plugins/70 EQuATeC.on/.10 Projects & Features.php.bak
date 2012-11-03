@@ -46,7 +46,7 @@ if($_POST['new_project_submit']){
 }
 
 if( ctype_digit($_GET['editproject']) ){
-$editProjectId = stripslashes($_GET['editproject']);
+$editProjectId = stripslashes($_GET['deleteproject']);
 
 $projectArray = $GLOBALS['EQUATEC']->project_get($editProjectId);
 $projectArray = $projectArray[0];

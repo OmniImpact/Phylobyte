@@ -134,53 +134,6 @@ case 'put_attribute':
 	}
 break;
 
-case 'add_course':
-
-	$coursename = $this->with['coursename'];
-	$coursecode = $this->with['coursecode'];
-	$schoolname = $this->with['schoolname'];
-	$locationstate = $this->with['locationstate'];
-	$locationschoolzip = $this->with['locationschoolzip'];
-	$description = $this->with['description'];
-	$subject = $this->with['subject'];
-	$createdby = $this->for;
-	
-	$coursenameQuoted = $this->DB->quote($this->with['coursename']);
-	$coursecodeQuoted = $this->DB->quote($this->with['coursecode']);
-	$schoolnameQuoted = $this->DB->quote($this->with['schoolname']);
-	$locationstateQuoted = $this->DB->quote($this->with['locationstate']);
-	$locationschoolzipQuoted = $this->DB->quote($this->with['locationschoolzip']);
-	$descriptionQuoted = $this->DB->quote($this->with['description']);
-	$subjectQuoted = $this->DB->quote($this->with['subject']);
-	$createdbyQuoted = $this->DB->quote($this->for);
-	
-	$createCourseQuery = $this->DB->prepare("
-		INSERT INTO cc_courses
-		(coursename, coursecode, schoolname, locationstate, locationschoolzip, description, subject, createdby)
-		VALUES
-		($coursenameQuoted, $coursecodeQuoted, $schoolnameQuoted, $locationstateQuoted,
-		$locationschoolzipQuoted, $descriptionQuoted, $subjectQuoted, $createdbyQuoted)
-	");
-	
-	if($createCourseQuery->execute()){
-		$this->result['success'] = true;
-		$this->result['message'] = 'Successfully added course.';
-	}
-	
-break;
-
-case 'teacher_getcourses':
-	$createdbyQuoted = $this->DB->quote($this->for);
-	$coursesQuery = $this->DB->prepare("
-		SELECT * FROM cc_courses WHERE createdby=$createdbyQuoted;
-	");
-	if($coursesQuery->execute()){
-		$coursesResults = $coursesQuery->fetchAll(PDO::FETCH_ASSOC);
-		$this->result['success'] = true;
-		$this->result['data'] = $coursesResults;
-	}
-break;
-
 default:
 	$this->result['message'] = 'Error: Authentication passed, but requested action not available.';
 break;

@@ -6,8 +6,15 @@
 # Exception to .gitignore #
 ###########################
 #!.gitignore
+
+
+# More Stuffs #
+##############
 dbconfig.array
 .directory
 *.bak
 *.kdev4
 .kdev4
+*.log
+*.orig
+data/imgcache/*

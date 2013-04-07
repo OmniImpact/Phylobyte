@@ -48,89 +48,12 @@ class phylobyte{
 				}catch(PDOException $e){
 					$this->messageAddDebug('Failed to open database: '.$e);
 				}
-			}elseif($this->sessionDbInfo['dbt'] == 'PostgreSQL'){
-				try{
-					$this->phylobyteDB = new PDO("pgsql:dbname={$this->sessionDbInfo['dbn']};host={$this->sessionDbInfo['dbh']}", $this->sessionDbInfo['dbu'], $this->sessionDbInfo['dbp']);
-				}catch(PDOException $e){
-					$this->messageAddDebug('Failed to open database: '.$e);
-				}
-			}elseif($this->sessionDbInfo['dbt'] == 'Sequel Server'){
-				try{
-					//$sysinfo = posix_uname();
-					//$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
-					$this->phylobyteDB = new PDO("odbc:Driver={SQL Server};Server={$this->sessionDbInfo['dbh']};Database={$this->sessionDbInfo['dbn']}; Uid={$this->sessionDbInfo['dbu']};Pwd={$this->sessionDbInfo['dbp']};");
-				}catch(PDOException $e){
-					$this->messageAddDebug('Failed to open database: '.$e);
-				}
 			}
 			$GLOBALS['PHYLOBYTEDB'] = $this->phylobyteDB;
 		}catch(PDOException $e){
 			$this->messageAddDebug('Failed to connect to the database.');
 		}
 		try{
-		if($this->sessionDbInfo['dbt'] == 'Sequel Server'){
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_groups')
-			CREATE TABLE p_groups (
-				id INTEGER PRIMARY KEY IDENTITY,
-				name TEXT,
-				description TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_users')
-			CREATE TABLE p_users (
-				id INTEGER PRIMARY KEY IDENTITY,
-				username TEXT,
-				password TEXT,
-				passwordtype TEXT,
-				status TEXT,
-				statusvalue TEXT,
-				super TEXT,
-				email TEXT,
-				primarygroup TEXT,
-				passwordhash TEXT,
-				fname TEXT,
-				lname TEXT,
-				personalphone TEXT,
-				publicphone TEXT,
-				description TEXT,
-				registered TEXT,
-				lastlogin TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_userinfo')
-			CREATE TABLE p_userinfo (
-				id INTEGER PRIMARY KEY IDENTITY,
-				uid TEXT,
-				fname TEXT,
-				mname TEXT,
-				lname TEXT,
-				nickname TEXT,
-				email TEXT,
-				personalnum TEXT,
-				publicnum TEXT,
-				description TEXT,
-				joindate TEXT,
-				lastused TEXT,
-				adminnote TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_memberships')
-			CREATE TABLE p_memberships (
-				id INTEGER PRIMARY KEY IDENTITY,
-				userid TEXT,
-				groupid TEXT,
-				lastused TEXT,
-				joined TEXT
-			);");
-			$this->phylobyteDB->exec("
-			IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='p_plugins')
-			CREATE TABLE p_plugins (
-				id INTEGER PRIMARY KEY IDENTITY,
-				groupid TEXT,
-				pluginname TEXT
-			);");
-		}else{
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_groups(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -148,35 +71,56 @@ class phylobyte{
 					super TEXT,
 					email TEXT
 				);");
+			try{
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_gattributes(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
-					gid TEXT,
+					gid INTEGER,
 					attribute TEXT,
-					defaultvalue TEXT
+					defaultvalue TEXT,
+						CONSTRAINT FOREIGN KEY (gid) REFERENCES p_groups(id)
 				);");
+			}catch(Exception $e){
+				$this->messageAddDebug($e);
+			}
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_uattributes(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
-					uid TEXT,
-					aid TEXT,
-					value TEXT
+					uid INTEGER,
+					aid INTEGER,
+					value TEXT,
+						CONSTRAINT FOREIGN KEY (uid) REFERENCES p_users(id),
+						CONSTRAINT FOREIGN KEY (aid) REFERENCES p_gattributes(id)
 				);");
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_memberships(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
-					userid TEXT,
-					groupid TEXT,
+					userid INTEGER,
+					groupid INTEGER,
 					lastused TEXT,
-					joined TEXT
+					joined TEXT,
+						CONSTRAINT FOREIGN KEY (userid) REFERENCES p_users(id),
+						CONSTRAINT FOREIGN KEY (groupid) REFERENCES p_groups(id)
 				);");
 			$this->phylobyteDB->exec("
 				CREATE TABLE IF NOT EXISTS p_plugins(
 					id INTEGER PRIMARY KEY AUTO_INCREMENT,
-					groupid TEXT,
-					pluginname TEXT
+					name VARCHAR (256) NOT NULL,
+					weight INTEGER,
+					enabled TEXT,
+					available TEXT,
+						UNIQUE KEY `name` (`name`)
 				);");
-		}
+			$this->phylobyteDB->exec("
+				CREATE TABLE IF NOT EXISTS p_pluginaccess(
+					id INTEGER PRIMARY KEY AUTO_INCREMENT,
+					pid INTEGER,
+					gid INTEGER,
+					uid INTEGER,
+						CONSTRAINT FOREIGN KEY (pid) REFERENCES p_plugins(id) ON DELETE CASCADE,
+						CONSTRAINT FOREIGN KEY (gid) REFERENCES p_groups(id) ON DELETE CASCADE,
+						CONSTRAINT FOREIGN KEY (uid) REFERENCES p_users(id) ON DELETE CASCADE 
+				);");
 			$getRows = $this->phylobyteDB->prepare("SELECT COUNT(*) FROM p_groups");
 			$getRows->execute();
 			$numRows = $getRows->fetchAll();
@@ -197,9 +141,17 @@ class phylobyte{
 		}catch(PDOException $e){
 			echo($e);
 		}
+		$this->updatePlugins();
 		if($this->login()){
-			$this->pageBuild();
-			$this->navBuild();
+			if($this->checkAdmin()){
+				$this->pageBuild();
+				$this->navBuild();
+			}else{
+				//you're not an admin!
+				header('Location: /');
+				$this->pageUser();
+				$this->navUser();
+			}
 		}
 	}
 
@@ -207,6 +159,39 @@ class phylobyte{
 		$GLOBALS['MESSAGESTAMPITR']++;
 		//this needs to use messageStampBase, and not the time directly
 		return $GLOBALS['MESSAGESTAMPBASE'].':'.$GLOBALS['MESSAGESTAMPITR']++;
+	}
+	
+	function updatePlugins(){
+		$this->phylobyteDB->exec("
+				UPDATE p_plugins
+				SET available='false';");
+		
+		//scan the plugins
+		$pluginDirArray = scandir('../plugins');
+
+		foreach($pluginDirArray as $possiblePlugin) {
+			if(substr($possiblePlugin, -2) == '.p'){
+			
+				$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -2)));
+				$pluginNumbers = Array();
+				preg_match('#^\d+#', $possiblePlugin, $pluginNumbers);
+				$pluginNumber = trim($pluginNumbers[0]);
+				
+				$name = $this->phylobyteDB->quote($pluginName);
+				$weight = $this->phylobyteDB->quote($pluginNumber);
+				
+				$this->phylobyteDB->exec("
+					INSERT INTO p_plugins (name, weight, enabled, available)
+					VALUES ($name, $weight, 'true', 'true') ON DUPLICATE key
+					UPDATE name=$name, weight=$weight, available='true';");
+				
+			}
+		}
+		
+		//delete any still unavailable
+		$this->phylobyteDB->exec("
+				DELETE FROM p_plugins
+				WHERE available='false';");
 	}
 
 	function login(){
@@ -243,6 +228,16 @@ class phylobyte{
 		}
 	}
 	
+	function checkAdmin(){
+		$adminquery = $this->phylobyteDB->prepare("SELECT * FROM p_memberships WHERE userid='{$_SESSION['loginid']}' AND groupid='1';");
+		$adminquery->execute();
+		$adminqueryArray = $adminquery->fetchAll();
+			if(count($adminqueryArray) > 0){
+				return true;
+			}
+		return false;
+	}
+	
 	function navBuild(){
 		$MS = new oi_mobilesupport;
 		$this->navigationArea.='
@@ -253,16 +248,20 @@ class phylobyte{
 		}
 
 		//ok, we are ready to build some navigation
-		$pluginDirArray = scandir('../plugins');
-
-		foreach($pluginDirArray as $possiblePlugin) {
-		    if(is_dir('../plugins/'.$possiblePlugin) && substr($possiblePlugin, -3) == '.on'){
+		$pluginQuery = $this->phylobyteDB->prepare("
+			SELECT * FROM p_plugins WHERE enabled='true' ORDER BY weight;
+		");
+		$pluginQuery->execute();
+		$pluginArray = $pluginQuery->fetchAll(PDO::FETCH_ASSOC);
+		
+		foreach($pluginArray as $plugin) {
+		    if(is_dir('../plugins/'.$plugin['weight'].' '.$plugin['name'].'.p') ){
 				//now we make sure the plugin has the minimal requirements
-				$pluginDir = $possiblePlugin;
-				$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
+				$pluginDir = $plugin['weight'].' '.$plugin['name'].'.p';
+				$pluginName = $plugin['name'];
 				if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 					//we have the minimal plugin setup, so we can now generate navigation
-					$this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -3).'">'.$pluginName;
+					$this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -2).'">'.$pluginName;
 						//if there is just one other page, we must make subnav.
 						$currentPluginDirArray = scandir('../plugins/'.$pluginDir);
 						$functionsArray = null;
@@ -275,7 +274,7 @@ class phylobyte{
 							$this->navigationArea.='&hellip;</a>';
 							$this->navigationArea.='<ul>';
 							foreach($functionsArray as $function) {
-							    $this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.str_replace('&', '%26', $function).'">'.trim(preg_replace('#^\d+#', '', $function)).'</a></li>';
+							    $this->navigationArea.='<li><a href="?plugin='.substr($pluginDir, 0, -2).'&amp;function='.str_replace('&', '%26', $function).'">'.trim(preg_replace('#^\d+#', '', $function)).'</a></li>';
 							}
 							$this->navigationArea.='</ul>';
 						}else{
@@ -287,6 +286,7 @@ class phylobyte{
 				}
 			}
 		}
+		
 		
 		if(!$MS->useMobile()){
 			if($_SERVER['QUERY_STRING'] == ''){
@@ -322,6 +322,48 @@ class phylobyte{
 		}
 		return true;
 	}
+	
+	function navUser(){
+		$MS = new oi_mobilesupport;
+		$this->navigationArea.='
+		<ul>';
+
+		if(!$MS->useMobile()){
+			$this->navigationArea.='<li><a href="?">Home</a></li>';
+		}
+
+		if(!$MS->useMobile()){
+			if($_SERVER['QUERY_STRING'] == ''){
+				$logoutQueryString = '?phylobyte=logout';
+			}else{
+				$logoutQueryString = '?'.$_SERVER['QUERY_STRING'].'&phylobyte=logout';
+			}
+			$this->navigationArea.='
+			</ul>
+			<ul style="float: right;">
+				<li>
+					<a href="../">View Website</a>
+				</li>
+				<li><a style="min-width: 10em; text-align: center;">Welcome, '.$this->sessionUserInfo['name'].' '.$this->sessionUserInfo['lname'].'</a>
+					<ul style="float: right; min-width: 100%;">
+						<li><a href="?phylobyte=account">My Account</a></li>
+						<li><a href="'.$logoutQueryString.'">Log Out</a></li>
+					</ul>
+				</li>
+			</ul>
+			';
+		}else{
+			$this->mobileNav = '
+				<div class="breadcrumbs" style="text-align: center; background-color: white; padding: 4pt;">
+					<a href="?" style="margin-top: 4pt;">Home</a>
+					<a href="../" style="margin-top: 4pt;">View Website</a>
+					<a href="?phylobyte=account" style="margin-top: 4pt;">My Account</a>
+					<a href="?phylobyte=logout" style="margin-top: 4pt;">Log Out</a>
+				</div>
+			';
+		}
+		return true;
+	}
 
 	function plugin_autoIndex($return = '
 	<hr/><br/>
@@ -338,9 +380,9 @@ class phylobyte{
 	</h3><br/>
 	'){
 		//index the functions
-		$pluginDir = stripslashes($_GET['plugin'].'.on');
+		$pluginDir = stripslashes($_GET['plugin'].'.p');
 		$pluginDirArray = scandir('../plugins/'.$pluginDir);
-		$pluginName = substr(trim(preg_replace('#^\d+#', '', $pluginDir)), 0, -3);
+		$pluginName = substr(trim(preg_replace('#^\d+#', '', $pluginDir)), 0, -2);
 		
 		foreach($pluginDirArray as $possibleFunction) {
 			if(substr($possibleFunction, -4) == '.php' 
@@ -357,8 +399,8 @@ class phylobyte{
 
 				$item = str_replace('%F%', str_replace('&', '%26',substr($function, 0, -4)), $return);
 				$item = str_replace('%Fn%', $functionName, $item);
-				if(is_file('../plugins/'.stripslashes($_GET['plugin']).'.on/'.substr($function, 0, -3).'dsc')){
-					$item = str_replace('%Fd%', stripslashes(file_get_contents('../plugins/'.stripslashes($_GET['plugin']).'.on/'.substr($function, 0, -3).'dsc')),$item);
+				if(is_file('../plugins/'.stripslashes($_GET['plugin']).'.p/'.substr($function, 0, -3).'dsc')){
+					$item = str_replace('%Fd%', stripslashes(file_get_contents('../plugins/'.stripslashes($_GET['plugin']).'.p/'.substr($function, 0, -3).'dsc')),$item);
 				}else{
 					$item = str_replace('%Fd%', '',$item);
 				}
@@ -386,7 +428,7 @@ class phylobyte{
 			return true;
 		}else{
 			//we have selected a plugin. Lets pull the name
-			$pluginDir = stripslashes($_GET['plugin']).'.on';
+			$pluginDir = stripslashes($_GET['plugin']).'.p';
 			$pluginName = trim(preg_replace('#^\d+#', '', stripslashes($_GET['plugin'])));
 			//include the init file
 			if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.init')){
@@ -403,7 +445,7 @@ class phylobyte{
 			$this->pageTitle.=' | '.$pluginName;
 
 			//make some breadcrumbs
-			$this->breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?plugin='.substr($pluginDir, 0, -3).'">'.$pluginName.'</a>';
+			$this->breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?plugin='.substr($pluginDir, 0, -2).'">'.$pluginName.'</a>';
 
 			
 			
@@ -425,7 +467,7 @@ class phylobyte{
 				//we include the function
 				$function = stripslashes($_GET['function']);
 				$this->pageTitle.=' | '.trim(preg_replace('#^\d+#', '', $function));
-				$this->breadcrumbs.=' &raquo; <a href="?plugin='.substr($pluginDir, 0, -3).'&amp;function='.str_replace('&', '%26', $function).'">'.trim(preg_replace('#^\d+#', '', $function)).'</a>';
+				$this->breadcrumbs.=' &raquo; <a href="?plugin='.substr($pluginDir, 0, -2).'&amp;function='.str_replace('&', '%26', $function).'">'.trim(preg_replace('#^\d+#', '', $function)).'</a>';
 				
 				if(is_file('../plugins/'.$pluginDir.'/'.$function.'.php')){
 					$includeFunction = '../plugins/'.$pluginDir.'/'.$function.'.php';
@@ -442,6 +484,17 @@ class phylobyte{
 		}
 		
 		
+		return true;
+	}
+	
+	function pageUser(){
+		//build the page based on the link, if nothing else, include home.
+		if(!isset($_GET['plugin']) && !isset($_GET['phylobyte'])){
+			include('homelimited.php');
+		}elseif($_GET['phylobyte'] == 'account'){
+			include('account.php');
+			return true;
+		}
 		return true;
 	}
 	

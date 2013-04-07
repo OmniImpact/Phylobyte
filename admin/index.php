@@ -22,6 +22,10 @@ $PHYLOBYTE->build_finish();
 		<link href="css/oi_reset.css" rel="stylesheet" type="text/css" /> 
 		<link href="css/style.css" rel="stylesheet" type="text/css" />
 		<?php $MS->addMobileStyle(); $MS->setScale(); ?>
+		<link rel="stylesheet" href="css/font-awesome.min.css" />
+		<!--[if IE 7]>
+		<link rel="stylesheet" href="css/font-awesome-ie7.min.css">
+		<![endif]-->
 		<link rel="icon" href="gfx/favicon.ico">
 		<?php echo $PHYLOBYTE->headArea;?>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
@@ -60,7 +64,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 		<?php echo $PHYLOBYTE->messageArea;?>
 	</div>
 	<div class="messageboxtab" id="messageboxtab">
-	&nbsp; Message Pile &nbsp;<span style="font-family: 'Entypo'; font-size: 160%;">&#59215;</span>&nbsp;
+	&nbsp; Message Pile &nbsp;<i class="icon-reorder" style="font-size: 80%;">&nbsp;</i>&nbsp;
 	</div>
 	<script type="text/javascript">
 	$('messagebox').set('styles', {
@@ -110,7 +114,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 
 <div style="float: none; clear: both; height: 0; overflow: hidden;">&nbsp;</div>
 <div class="footer">
-	Phylobyte is &copy;2011 Daniel S. Marcus / <a href="http://omniimpact.com/">Omni Impact</a> under terms of the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> | <?php $MS->mobileToggle(); ?>
+	Phylobyte is &copy;2013 Daniel S. Marcus / <a href="http://omniimpact.com/">Omni Impact</a> under terms of the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> | <?php $MS->mobileToggle(); ?>
 </div>
 
 </body>

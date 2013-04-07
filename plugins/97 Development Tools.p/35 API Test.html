@@ -1,0 +1,30 @@
+<h3>API Test</h3>
+<p>
+The API is designed to allow functions to be performed in a consistent and useful language.
+</p>
+
+<h3>Parameters</h3>
+<p>
+To use the API, send a standard HTTP POST request to http://example.com/api.php.
+</p>
+<p>
+The API accepts four arguments, all as named POST input. They are "for", "do", "token", and "with".
+"for" is the user ID of the account you want to perform a function for. "do" is the action, and specifies
+what function you want to perform. "token" is the method of verification. A token is assigned on login,
+and is used as a security key. The correct token must be passed with a user ID in order to perform
+account specific functions. If no "for" or "token" arguments are passed, there are a limited number
+of functions that can be performed, such as registering a new user. Any additional information is passed
+as a JSON object, usually key-value pairs, in the "with" attribute.
+</p>
+
+<h3>Return</h3>
+<p>
+The API returns a JSON object. The returned object will contain five keyed objects.
+"success" is a boolean true or false, stating whether the request was successful.
+"timestamp" is the UNIX timestamp that the request was performed. "exectime" is used
+to detect performance problems, and is the API request execution time in microseconds.
+"message" is an English-language explanation of what happened. This can be presented
+to the user if needed, or used by a developer to diagnose problems performing operations
+with the API. "data" is a JSON object, usually key-value pairs that give the results
+of the operation.
+</p>

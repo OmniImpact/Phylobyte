@@ -174,6 +174,10 @@ class oi_mobilesupport{
 			//'mobile','phone','portable','small', or 'compact' and end with '.css'
 			//also, kick out 'old_', '_old', '*~' or '.bak' files
 			
+			if(is_dir('css')){
+				$lookIn = 'css';
+			}
+			
 			if($lookIn == ''){
 				$possibleStyleSheets = scandir('.');
 			}else{

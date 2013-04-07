@@ -1,18 +1,10 @@
+@import url('http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800');
+
 *{
 	margin: 0;
 	padding: 0;
 	font-size: 11pt;
-	font-family: "Free Sans",sans-serif;
-}
-
-@font-face {
-	font-family: "Entypo";
-	src: url('entypo/entypo/entypo.eot');
-	src: url('entypo/entypo/entypo.woff') format('woff'),
-		url('entypo/entypo/entypo.ttf') format('truetype'),
-		url('entypo/entypo/entypo.svg') format('svg');
-	font-weight: normal;
-	font-style: normal;
+	font-family: 'Open Sans',sans-serif;
 }
 
 body{
@@ -75,6 +67,8 @@ a:visited, a:visited:hover{
 	color: white;
 	border: none;
 	line-height: 1;
+	position: relative;
+	z-index: 1;
 }
 
 #dropdown a{
@@ -129,6 +123,7 @@ a:visited, a:visited:hover{
 	overflow: hidden;
 	min-height: 0;
 	margin-left: 0;
+	margin-top: 0;
 	border: none;
 	box-shadow: 1pt 3pt 5pt rgba(0,0,0,0.3);
 }
@@ -301,7 +296,6 @@ a:visited, a:visited:hover{
 }
 
 .leftcol h3{
-	font-weight: lighter;
 	color: #249924;
 	font-size: 120%;
 	margin-bottom: .4em;
@@ -313,7 +307,7 @@ a:visited, a:visited:hover{
 	background-color: #249924;
 }
 
-.leftcol input[type="submit"] {
+.leftcol input[type="submit"], .leftcol input[type="reset"] {
 	font-weight: bold;
 	background-color: #ccc;
 	color: black;
@@ -325,7 +319,7 @@ a:visited, a:visited:hover{
 	float: right;
 }
 
-.leftcol input[type="submit"]:hover {
+.leftcol input[type="submit"]:hover, .leftcol input[type="reset"]:hover {
 	background-color: #eee;
 	color: #135313;
 }
@@ -339,7 +333,6 @@ a:visited, a:visited:hover{
 }
 
 .rightcol h3{
-	font-weight: lighter;
 	color: #249924;
 	font-size: 120%;
 	margin-bottom: .4em;
@@ -445,6 +438,7 @@ a:visited, a:visited:hover{
 
 .pluginbox .padding{
 	padding: 1.2em;
+	padding-top: 0;
 }
 
 .pluginbox .breadcrumbs{
@@ -467,7 +461,6 @@ a:visited, a:visited:hover{
 	font-size: 140%;
 	color: gray;
 	line-height: 2em;
-	font-weight: lighter;
 }
 
 .home ul{

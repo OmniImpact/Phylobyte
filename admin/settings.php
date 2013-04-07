@@ -23,17 +23,6 @@ if($_POST['db_submit'] == 'Save Configuration'){
 		}catch(PDOException $e){
 			$this->messageAddDebug('Failed to open database: '.$e);
 		}
-	}elseif($dbt == 'Sequel Server'){
-	    try{
-			$sysinfo = posix_uname();
-			$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
-			$testDB =new PDO("odbc:Driver=$sequelServerDriver;Server=$dbh;Database=$dbn; Uid=$dbu;Pwd=$dbp;");
-			$this->messageAddNotification('Successfully connected to Sequel Server database. Saving configuration.');
-			file_put_contents('../data/dbconfig.array', serialize(Array('dbt' => $dbt, 'dbh' => $dbh, 'dbn' => $dbn, 'dbu' => $dbu, 'dbp' => $dbp)));
-			$this->messageAddAlert('You need to log out for changes to take effect.');
-		}catch(PDOException $e){
-			$this->messageAddDebug('Failed to open database: '.$e);
-		}
 	}else{
 		$this->messageAddError('Could not understand database type.');
 	}
@@ -41,26 +30,31 @@ if($_POST['db_submit'] == 'Save Configuration'){
 
 //are we trying to toggle a page?
 if(isset($_GET['toggle'])){
-	if(is_dir('../plugins/'.stripslashes($_GET['toggle'])) ){
-		//get the last two letters to know what to toggle
-		$pluginName = stripslashes($_GET['toggle']);
-		$pluginStatus = substr($pluginName, -2);
-		if($pluginStatus == 'on'){
-			if(rename('../plugins/'.stripslashes($_GET['toggle']), '../plugins/'.substr(stripslashes($_GET['toggle']), 0 ,-2).'no' ) ){
-				$this->messageAddNotification('Successfully disabled plugin');
-			}else{
-				$this->messageAddError('There was a problem disabling the plugin.');
-			}
-		}else{
-			if(rename('../plugins/'.stripslashes($_GET['toggle']), '../plugins/'.substr(stripslashes($_GET['toggle']), 0 ,-2).'on' ) ){
-				$this->messageAddNotification('Successfully enabled plugin'); 	
-			}else{
-				$this->messageAddError('There was a problem enabling the plugin.');
-			}
-		}
+	$pluginId = $this->phylobyteDB->quote($_GET['toggle']);
+	
+	//get current plugin info
+	//ok, we are ready to build some navigation
+	$pluginQuery = $this->phylobyteDB->prepare("
+		SELECT * FROM p_plugins WHERE id=$pluginId;
+	");
+	$pluginQuery->execute();
+	$pluginArray = $pluginQuery->fetchAll(PDO::FETCH_ASSOC);
+	$pluginArray = $pluginArray[0];
+	
+	if($pluginArray['enabled'] == 'true'){
+		//disable the plugin
+		$this->messageAddNotification('Disabling '.$pluginArray['name']);
+		$this->phylobyteDB->exec("
+			UPDATE p_plugins SET enabled='false' WHERE id=$pluginId;
+		");
 	}else{
-		$this->messageAddError('Unable to toggle plugin. That plugin does not exist in the requested state.');
+		//enable the plugin
+		$this->messageAddNotification('Enabling '.$pluginArray['name']);
+		$this->phylobyteDB->exec("
+			UPDATE p_plugins SET enabled='true' WHERE id=$pluginId;
+		");
 	}
+	
 }
 
 //a little stye
@@ -112,11 +106,23 @@ $this->docArea.='
 //get a list of the available plugins
 $pluginDirArray = scandir('../plugins');
 
-foreach($pluginDirArray as $possiblePlugin) {
-	if(is_dir('../plugins/'.$possiblePlugin) && substr($possiblePlugin, -3) == '.on'){
+$pluginsEnabledQuery = $this->phylobyteDB->prepare("
+	SELECT * FROM p_plugins WHERE enabled='true' ORDER BY weight;
+");
+$pluginsEnabledQuery->execute();
+$pluginsEnabledArray = $pluginsEnabledQuery->fetchAll(PDO::FETCH_ASSOC);
+
+$pluginsDisabledQuery = $this->phylobyteDB->prepare("
+	SELECT * FROM p_plugins WHERE enabled='false' ORDER BY weight;
+");
+$pluginsDisabledQuery->execute();
+$pluginsDisabledArray = $pluginsDisabledQuery->fetchAll(PDO::FETCH_ASSOC);
+
+foreach($pluginsEnabledArray as $enabledPlugin) {
+	if(is_dir('../plugins/'.$enabledPlugin['weight'].' '.$enabledPlugin['name'].'.p') ){
 		//now we make sure the plugin has the minimal requirements
-		$pluginDir = $possiblePlugin;
-		$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
+		$pluginDir = $enabledPlugin['weight'].' '.$enabledPlugin['name'].'.p';
+		$pluginName = $enabledPlugin['name'];
 		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$onPluginsList.='
@@ -149,7 +155,7 @@ foreach($pluginDirArray as $possiblePlugin) {
 					}
 				}
 			$onPluginsList.='<td style="text-align: center;">
-			<a href="?phylobyte=settings&amp;toggle='.$possiblePlugin.'" style="color: #800; font-weight: bold;">Toggle Off</a>
+			<a href="?phylobyte=settings&amp;toggle='.$enabledPlugin['id'].'" style="color: #800; font-weight: bold;">Toggle Off</a>
 			</td>';
 			//finish the list element
 			$onPluginsList.='</tr>';
@@ -157,11 +163,11 @@ foreach($pluginDirArray as $possiblePlugin) {
 	}
 }
 
-foreach($pluginDirArray as $possiblePlugin) {
-	if(is_dir('../plugins/'.$possiblePlugin) && substr($possiblePlugin, -3) == '.no'){
+foreach($pluginsDisabledArray as $disabledPlugin) {
+	if(is_dir('../plugins/'.$disabledPlugin['weight'].' '.$disabledPlugin['name'].'.p')){
 		//now we make sure the plugin has the minimal requirements
-		$pluginDir = $possiblePlugin;
-		$pluginName = trim(preg_replace('#^\d+#', '', substr($possiblePlugin, 0, -3)));
+		$pluginDir = $disabledPlugin['weight'].' '.$disabledPlugin['name'].'.p';
+		$pluginName = $disabledPlugin['name'];
 		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$offPluginsList.='
@@ -193,7 +199,7 @@ foreach($pluginDirArray as $possiblePlugin) {
 						$offPluginsList.='<td>This plugin does not provide a description.</td>';
 					}
 				}
-			$offPluginsList.='<td style="text-align: center;"><a href="?phylobyte=settings&amp;toggle='.$possiblePlugin.'" style="color: #080; font-weight: bold;">Toggle On</a></td>';
+			$offPluginsList.='<td style="text-align: center;"><a href="?phylobyte=settings&amp;toggle='.$disabledPlugin['id'].'" style="color: #080; font-weight: bold;">Toggle On</a></td>';
 			//finish the list element
 			$offPluginsList.='</tr>';
 		}

@@ -1,5 +1,4 @@
 <?php
-
 //process
 if(isset($_POST['p_submit']) || $this->sessionUserInfo['status'] == 'override'){
 	
@@ -94,13 +93,13 @@ $this->pageArea = '
 <form action="'.$queryString.'" method="POST" style="border-bottom: none; padding-bottom: 0;">
 	<label for="p_username">User Name</label><input type="text" name="p_username" value="'.$currentUserName.'" id="defaultInput"/><br/>
 	<label for="p_password">Password</label><input type="password" name="p_password" value="'.$currentPassword.'"/><br/>
-	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Log In" />
+	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Log In" style="margin-left: 5%; margin-right: 12%; width: 40%;" />
 	<script type="text/javascript">
 	 document.getElementById (\'defaultInput\').focus();
 	</script>
 </form>
 <form action="../" method="POST" style="border-top: none; padding-top: 0;">
-	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Return to Website" />
+	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Return to Website" style="margin-left: 5%; margin-right: 12%; width: 40%;" />
 	<div class="ff">&nbsp;</div>
 </form>
 </fieldset>

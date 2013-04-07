@@ -205,10 +205,10 @@ class oi_mobilesupport{
 		//if $styleSheetName is an array, we must loop it
 		if(is_array($styleSheetName)){
 			foreach($styleSheetName as $styleSheet){
-				echo('<link rel="stylesheet" href="'.$styleSheet.'" type="text/css"/>');
+				echo('<link rel="stylesheet" type="text/css" href="'.$styleSheet.'"/>'."\n");
 			}
 		}else{
-			echo('<link rel="stylesheet" href="'.$styleSheetName.'" type="text/css"/>');
+			echo('<link rel="stylesheet" type="text/css" href="'.$styleSheetName.'"/>'."\n");
 		}
 	}
 	

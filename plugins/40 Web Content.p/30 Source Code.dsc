@@ -1,0 +1,1 @@
+View and manage different HTML code blocks you can then include in different pages.

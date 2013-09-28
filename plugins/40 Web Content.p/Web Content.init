@@ -353,6 +353,8 @@ class pcontent{
 	
 }
 
+include("../plugins/80 CMS Tools.p/CMS Tools.init");
+
 $GLOBALS['PCON'] = new pcontent;
 
 ?>

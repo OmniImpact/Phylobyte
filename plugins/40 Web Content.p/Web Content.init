@@ -30,6 +30,49 @@ class pcontent{
 				phylobyte::messageAddError('Could not initialize file storage; you will not be able to upload any files.');
 			}
 		}
+
+        /**
+         * This is called at the beginning of each plugin that does
+         * basic page management. It makes sure the database is set up.
+         *
+         * pc_items
+         *  id
+         *  type (page, section)
+         *  name
+         *  description
+         *  date
+         *  lastupdate
+         *  weight
+         *  content
+         *  in_section
+         *  in_navigation
+		 *  i_is_visible
+		 *  i_in_nav
+         *
+         */
+
+        try{
+            $this->pDB->exec("
+                CREATE TABLE IF NOT EXISTS pc_items(
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                i_type TEXT,
+                i_name TEXT,
+                i_description TEXT,
+                i_date TIMESTAMP DEFAULT 0,
+                i_update TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                i_weight INTEGER,
+                i_content TEXT,
+                i_in_sec INTEGER,
+                i_content_type TEXT,
+                i_is_visible BOOLEAN.
+                i_in_nav BOOLEAN,
+                CONSTRAINT FOREIGN KEY (i_in_sec)
+                  REFERENCES pc_items(id) ON DELETE CASCADE
+			);");
+        }catch(Exception $e){
+            phylobyte::messageAddDebug($e);
+        }
+
 	}
 
 	function file_get_simple_type($ext){
@@ -216,6 +259,97 @@ class pcontent{
 			return false;
 		}
 	}
+
+    /**
+     * Page Management Functions
+     */
+
+	function items_add($name, $type, $in_sec = null){
+
+		$types = array(
+			'item_page',
+			'item_pages',
+			'item_entries'
+		);
+
+		if(!in_array($type, $types)){
+			phylobyte::messageAddError('Could not add new item; invalid type: '.$type);
+			return false;
+		}
+
+
+		if(!$in_sec){
+			$insert_name = $this->pDB->quote($name);
+			$insert_type = $this->pDB->quote($type);
+			$insert_timestamp = $this->pDB->quote(date('Y-m-d H:i:s',time()));
+
+			try{
+				$this->pDB->exec("
+					INSERT INTO pc_items
+					(i_name, i_type, i_date)
+					VALUES
+					($insert_name, $insert_type, $insert_timestamp);
+				");
+				phylobyte::messageAddNotification('Successfully created new item.');
+			}catch(Exception $e){
+				phylobyte::messageAddDebug($e);
+			}
+		}else{
+			$insert_name = $this->pDB->quote($name);
+			$insert_type = $this->pDB->quote($type);
+			$insert_timestamp = $this->pDB->quote(date('Y-m-d H:i:s',time()));
+			$insert_in_sec = $this->pDB->quote($in_sec);
+
+			try{
+				$this->pDB->exec("
+                    INSERT INTO pc_items
+					(i_name, i_type, i_date, i_in_sec)
+					VALUES
+					($insert_name, $insert_type, $insert_timestamp, $insert_in_sec);
+				");
+				phylobyte::messageAddNotification('Successfully created new item.');
+			}catch(Exception $e){
+				phylobyte::messageAddDebug($e);
+			}
+		}
+
+	}
+
+	function items_array($filter = null, $in = null){
+
+		if(is_numeric($in)){
+			$insecclause = "AND (items1.i_in_sec = ".$in." OR items1.id = ".$in.")";
+		}elseif($in == 'top'){
+			$insecclause = "AND items1.i_in_sec IS NULL";
+		}else{
+			$insecclause = '';
+		}
+
+		$items = $this->pDB->prepare("
+			SELECT items1.*, items2.i_name AS i_parent_name,
+				IF(items1.i_in_sec IS NULL, items1.id, items1.i_in_sec) AS i_section
+			FROM pc_items items1
+			LEFT OUTER JOIN pc_items items2 ON items1.i_in_sec = items2.id
+			WHERE items1.i_name LIKE '%$filter%' $insecclause
+			ORDER BY i_section, i_in_sec, i_weight, i_name;");
+		$items->execute();
+		$items = $items->fetchAll();
+
+		return $items;
+	}
+
+	function item_delete($id){
+		$clearInSec = $this->pDB->prepare("
+			UPDATE pc_items SET i_in_sec = NULL WHERE i_in_sec = $id;
+			");
+		$clearInSec->execute();
+		$delete = $this->pDB->prepare("
+			DELETE FROM pc_items WHERE id = $id;
+		");
+		$delete->execute();
+		phylobyte::messageAddNotification('Successfully deleted item.');
+	}
+
 	
 }
 

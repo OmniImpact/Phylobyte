@@ -510,16 +510,16 @@ class phylobyte{
 		$this->messageArea = str_replace('##.', '</div>', $this->messageArea);
 	}
 	
-	function messageAddAlert($alert){
+	static function messageAddAlert($alert){
 		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#a.'.$alert.'##.');
 	}
-	function messageAddError($error){
+	static function messageAddError($error){
 		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#e.'.$error.'##.');
 	}
-	function messageAddNotification($notice){
+	static function messageAddNotification($notice){
 		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#n.'.$notice.'##.');
 	}
-	function messageAddDebug($debug){
+	static function messageAddDebug($debug){
 		$GLOBALS['MESSAGES']->push(phylobyte::messageStamp(), '#d.'.$debug.'##.');
 	}
 }

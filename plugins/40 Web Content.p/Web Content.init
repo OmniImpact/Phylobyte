@@ -64,7 +64,7 @@ class pcontent{
                 i_content TEXT,
                 i_in_sec INTEGER,
                 i_content_type TEXT,
-                i_is_visible BOOLEAN.
+                i_is_visible BOOLEAN,
                 i_in_nav BOOLEAN,
                 CONSTRAINT FOREIGN KEY (i_in_sec)
                   REFERENCES pc_items(id) ON DELETE CASCADE

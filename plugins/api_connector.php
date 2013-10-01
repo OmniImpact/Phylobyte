@@ -1,8 +1,8 @@
 <?php
 
-class raphrase_connector{
+class api_connector{
 
-	private $location = 'http://raphrase.com/api.php';
+	private $location = 'http://localhost/~daniel/phylobyte/api.php';
 
 	function getResponse($for, $do, $token, $with){
 	

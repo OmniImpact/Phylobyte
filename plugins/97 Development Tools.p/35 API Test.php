@@ -46,11 +46,29 @@ switch($_SESSION['show_features']){
 	case 'Login and Registration':
 	$forms = '
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="post">
-<h3>Log In</h3>
+<h3>login</h3>
 <input type="hidden" name="do" value="login" />
 <label for="with_username">Username</label><input name="with_username" /><br/>
 <label for="with_password">Password</label><input name="with_password" /><br/>
 <label for="with_platform">Platform</label><input name="with_platform" /><br/>
+<input type="submit" />
+<div class="ff">&nbsp;</div>
+</form>
+
+<form action="?'.$_SERVER['QUERY_STRING'].'" method="post">
+<h3>account_check</h3>
+<input type="hidden" name="do" value="account_check" />
+<label for="with_username">username</label><input name="with_username" value=""/><br/>
+<input type="submit" />
+<div class="ff">&nbsp;</div>
+</form>
+
+<form action="?'.$_SERVER['QUERY_STRING'].'" method="post">
+<h3>account_create</h3>
+<input type="hidden" name="do" value="account_create" />
+<label for="with_username">username</label><input name="with_username" value=""/><br/>
+<label for="with_nickname">email</label><input name="with_email" value=""/><br/>
+<label for="with_password">password</label><input name="with_password" value=""/><br/>
 <input type="submit" />
 <div class="ff">&nbsp;</div>
 </form>

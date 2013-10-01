@@ -36,10 +36,10 @@ $tableCheckTemplate = '
 <div class="tablecheck">
 <div class="tablechecki">
 
-<form class="inlineform" action="?'.$_SERVER['QUERY_STRING'].'" method="POST"
+<!--<form class="inlineform" action="?'.$_SERVER['QUERY_STRING'].'" method="POST"
 style="text-align: right; float: left;">
 <button type="submit" name="runsetup" value="%t%" style="font-size: 80%; padding: 2pt; margin-right: 1em;">Setup</button>
-</form>
+</form>-->
 
 <div>
 <strong>%T%</strong>
@@ -109,6 +109,12 @@ Array('id','uid','aid','value'),
 $this->pageArea.=$GLOBALS['UGP']->checkDb($tableCheckTemplate, 'p_plugins', 
 Array('id','name','weight','enabled','available'),
 'Phylobyte Plugins', 'Tracks plugins status', $good, $bad);
+
+$this->pageArea.='<hr/>';
+
+$this->pageArea.=$GLOBALS['UGP']->checkDb($tableCheckTemplate, 'pc_items',
+Array('id','i_type','i_name','i_description','i_date','i_update','i_weight','i_content','i_in_sec','i_content_type','i_is_visible','i_in_nav','i_search_content'),
+'Phylobyte Basic Pages', 'Handles generic items used by Basic Pages', $good, $bad);
 
 }
 ?>

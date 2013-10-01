@@ -66,12 +66,55 @@ class pcontent{
                 i_content_type TEXT,
                 i_is_visible BOOLEAN,
                 i_in_nav BOOLEAN,
+                i_search_content TEXT,
                 CONSTRAINT FOREIGN KEY (i_in_sec)
                   REFERENCES pc_items(id) ON DELETE CASCADE
 			);");
         }catch(Exception $e){
             phylobyte::messageAddDebug($e);
         }
+
+		/**
+		 *  TABLE pc_tags
+		 * 	id
+		 * 	section
+		 * 	tag
+		 */
+
+		try{
+			$this->pDB->exec("
+                CREATE TABLE IF NOT EXISTS pc_tags(
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                t_tag TEXT,
+                t_section INTEGER,
+                CONSTRAINT FOREIGN KEY (t_section)
+                  REFERENCES pc_items(id)
+			);");
+		}catch(Exception $e){
+			phylobyte::messageAddDebug($e);
+		}
+
+		/**
+		 * TABLE pc_tagged
+		 * 	id
+		 * 	item
+		 * 	tagid
+		 */
+
+		try{
+			$this->pDB->exec("
+                CREATE TABLE IF NOT EXISTS pc_tagged(
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                t_item INTEGER,
+                t_tagid INTEGER,
+                CONSTRAINT FOREIGN KEY (t_item)
+                  REFERENCES pc_items(id),
+                CONSTRAINT FOREIGN KEY (t_tagid)
+                  REFERENCES pc_tags(id)
+			);");
+		}catch(Exception $e){
+			phylobyte::messageAddDebug($e);
+		}
 
 	}
 
@@ -277,7 +320,6 @@ class pcontent{
 			return false;
 		}
 
-
 		if(!$in_sec){
 			$insert_name = $this->pDB->quote($name);
 			$insert_type = $this->pDB->quote($type);
@@ -286,9 +328,9 @@ class pcontent{
 			try{
 				$this->pDB->exec("
 					INSERT INTO pc_items
-					(i_name, i_type, i_date)
+					(i_name, i_type, i_date, i_content_type, i_weight)
 					VALUES
-					($insert_name, $insert_type, $insert_timestamp);
+					($insert_name, $insert_type, $insert_timestamp, 'wysiwyg', 0);
 				");
 				phylobyte::messageAddNotification('Successfully created new item.');
 			}catch(Exception $e){
@@ -303,9 +345,9 @@ class pcontent{
 			try{
 				$this->pDB->exec("
                     INSERT INTO pc_items
-					(i_name, i_type, i_date, i_in_sec)
+					(i_name, i_type, i_date, i_in_sec, i_is_visible, i_in_nav, i_content_type, i_weight)
 					VALUES
-					($insert_name, $insert_type, $insert_timestamp, $insert_in_sec);
+					($insert_name, $insert_type, $insert_timestamp, $insert_in_sec, FALSE, FALSE, 'wysiwyg', 0);
 				");
 				phylobyte::messageAddNotification('Successfully created new item.');
 			}catch(Exception $e){
@@ -327,11 +369,11 @@ class pcontent{
 
 		$items = $this->pDB->prepare("
 			SELECT items1.*, items2.i_name AS i_parent_name,
-				IF(items1.i_in_sec IS NULL, items1.id, items1.i_in_sec) AS i_section
+				 IF(items1.i_in_sec IS NULL, IF(items1.i_type = 'item_entries' OR items1.i_type = 'item_pages', items1.id, -1), items1.i_in_sec) AS i_section
 			FROM pc_items items1
 			LEFT OUTER JOIN pc_items items2 ON items1.i_in_sec = items2.id
 			WHERE items1.i_name LIKE '%$filter%' $insecclause
-			ORDER BY i_section, i_in_sec, i_weight, i_name;");
+			ORDER BY i_section, i_in_sec, items1.i_weight ASC, items1.i_name;");
 		$items->execute();
 		$items = $items->fetchAll();
 
@@ -348,6 +390,15 @@ class pcontent{
 		");
 		$delete->execute();
 		phylobyte::messageAddNotification('Successfully deleted item.');
+	}
+
+	function item_get($id){
+		$item = $this->pDB->prepare("
+			SELECT * FROM pc_items WHERE id = $id;
+		");
+		$item->execute();
+		$item = $item->fetchAll();
+		return array_pop($item);
 	}
 
 	

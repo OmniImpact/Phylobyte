@@ -143,13 +143,13 @@
 		$this->breadcrumbs .= ' &raquo; Add Code Block';
 
 		$this->headArea .= '
-		<script type="text/javascript" src="../plugins/codemirror.js"></script>
-		<script type="text/javascript" src="../plugins/codemirror_css.js"></script>
-		<script type="text/javascript" src="../plugins/codemirror_javascript.js"></script>
-		<script type="text/javascript" src="../plugins/codemirror_clike.js"></script>
-		<script type="text/javascript" src="../plugins/codemirror_matchbrackets.js"></script>
-		<script type="text/javascript" src="../plugins/codemirror_php.js"></script>
-		<link rel="stylesheet" href="../plugins/codemirror.css" />
+		<script type="text/javascript" src="../plugins/codemirror/codemirror.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_css.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_javascript.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_clike.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_matchbrackets.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_php.js"></script>
+		<link rel="stylesheet" href="../plugins/codemirror/codemirror.css" />
 		<style>.CodeMirror {border: 1px solid #000;}</style>
 		';
 

@@ -1,5 +1,32 @@
 <?php
 
+
+//a little javascript
+$this->pageArea.= '
+<script type="text/javascript">
+	var lastChangedName = null;
+
+	function changeClass(targetID, classA, classB){
+		var node = document.getElementById(targetID);
+		lastChangedName = targetID;
+		var currentClasses = node.className.split(\' \');
+		var currentFirstClass = currentClasses[0];
+		if(currentFirstClass == classA){
+			currentClasses[0] = classB;
+		}else if(currentFirstClass == classB){
+			currentClasses[0] = classA;
+		}
+		node.className = currentClasses.join(\' \');
+	}
+
+	function changeLast(classA, classB){
+		if(lastChangedName != null){
+			changeClass(lastChangedName, classA, classB);
+		}
+	}
+</script>
+';
+
 /**
  * Process
  */
@@ -33,6 +60,69 @@ if(stristr($_POST['item_action'], 'save')){
 	$_POST['item_selected_id'] = false;
 	return;
 }
+
+//The item has now been updated if requested
+
+
+/**
+ * Get the item from the database
+ */
+
+$itemId = $_POST['item_selected_id'];
+
+$item = $GLOBALS['PCON']->item_get($itemId);
+
+//now we update the tags if requested
+
+if(stristr($_POST['item_action'], 'add')){
+	//the information is requested to be updated
+
+	$tag = $GLOBALS['PCON']->pDB->quote($_POST['tag_name']);
+	$sectionItem = $item['id'];
+
+	$updateQuery = "
+		INSERT INTO pc_tags (t_tag, t_section) VALUES ($tag, $sectionItem);
+	";
+
+	$updateItem = $GLOBALS['PCON']->pDB->prepare($updateQuery);
+	$updateItem->execute();
+
+	phylobyte::messageAddNotification('Added tag to section properties.');
+}
+
+if(stristr($_POST['item_action'], 'rename')){
+	//the information is requested to be updated
+
+	$tag = $GLOBALS['PCON']->pDB->quote($_POST['tag_name']);
+	$tagId = $GLOBALS['PCON']->pDB->quote($_POST['tag_id']);
+	$sectionItem = $item['id'];
+
+	$updateQuery = "
+		UPDATE pc_tags SET t_tag=$tag WHERE id=$tagId;
+	";
+
+	$updateItem = $GLOBALS['PCON']->pDB->prepare($updateQuery);
+	$updateItem->execute();
+
+	phylobyte::messageAddNotification('Updating tag in section properties.');
+}
+
+if(stristr($_POST['item_action'], 'remove')){
+	//the information is requested to be updated
+
+	$tagId = $GLOBALS['PCON']->pDB->quote($_POST['tag_id']);
+
+	$updateQuery = "
+		DELETE FROM pc_tags WHERE id=$tagId;
+	";
+
+	$updateItem = $GLOBALS['PCON']->pDB->prepare($updateQuery);
+	$updateItem->execute();
+
+	phylobyte::messageAddNotification('Deleting tag from properties.');
+}
+
+
 
 //get sections for dropdown
 
@@ -76,13 +166,6 @@ $this->docArea = '
 
 ';
 
-/**
- * Get the item from the database
- */
-
-$itemId = $_POST['item_selected_id'];
-
-$item = $GLOBALS['PCON']->item_get($itemId);
 
 
 $this->breadcrumbs.=' &raquo; Item Properties &raquo; '.$item['i_name'];
@@ -171,6 +254,26 @@ if($item['i_type'] == 'item_entries'){
 	 * It allows you to create tags which will be used to organize the entries.
 	 */
 
+	//get the tags
+
+	$tagQuery = "SELECT * FROM pc_tags WHERE t_section='{$item['id']}' ORDER BY t_tag";
+	$tagsArray = $GLOBALS['PCON']->pDB->prepare($tagQuery);
+	$tagsArray->execute();
+	$tagsArray = $tagsArray->fetchAll();
+
+$tagsRows = '';
+foreach($tagsArray as $tagArray){
+	$tagsRows.='
+		<tr id="item_row_'.$tagArray['id'].'" class="table_row_normal">
+			<td style="text-align: center;"><input type="radio" name="tag_id" value="'.$tagArray['id'].'"
+			onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'item_row_'.$tagArray['id'].'\', \'table_row_normal\', \'table_row_highlight\');"
+			onclick="document.getElementById(\'tag_name\').value = \''.addslashes($tagArray['t_tag']).'\';"
+			/></td>
+			<td>'.$tagArray['t_tag'].'</td>
+		</tr>
+	';
+}
+
 	$this->docArea.= '
 <h3>
     Entry Tags
@@ -190,14 +293,23 @@ $this->pageArea.= '
 	<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
 		<input type="hidden" name="item_selected_id" value="'.$item['id'].'" />
 
-		<label for="item_name">Item Name</label><input type="text" name="item_name" value="'.$item['i_name'].'"/><br/>
-		<label for="item_action">&nbsp;</label><input type="submit" name="item_action" value="Add New Tag" />
-		<label for="item_action">&nbsp;</label><input type="submit" name="item_action" value="Rename Selected Tag" />
+		<table class="selTable">
+			<tr>
+				<th>Select</th><th>Tag Name</th>
+			</tr>
+			'.$tagsRows.'
+		</table>
+
+		<div class="ff">&nbsp;</div>
+
+		<label for="tag_name">Tag Name</label><input type="text" name="tag_name" id="tag_name" value=""/><br/>
+		<label for="item_action">&nbsp;</label><input type="submit" name="item_action" value="Add Tag to Properties" />
+		<label for="item_action">&nbsp;</label><input type="submit" name="item_action" value="Rename Tag in Properties" />
 
 		<div class="ff">&nbsp;</div>
 
 		<div class="destructive">
-		<label for="item_action">&nbsp;</label><input type="submit" name="item_action" value="Remove Selected Tag" />
+		<label for="item_action">&nbsp;</label><input type="submit" name="item_action" value="Remove Tag from Properties" />
 		<div class="ff">&nbsp;</div>
 		</div>
 

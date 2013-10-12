@@ -38,6 +38,7 @@ $PHYLOBYTE->build_finish();
 		jQuery.noConflict();
 		</script>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools-yui-compressed.js"></script>
+		<script src="//tinymce.cachefly.net/4.0/tinymce.min.js"></script>
 	</head> 
 <body>
 

@@ -22,18 +22,16 @@ $PHYLOBYTE->build_finish();
 		<link href="css/oi_reset.css" rel="stylesheet" type="text/css" /> 
 		<link href="css/style.css" rel="stylesheet" type="text/css" />
 		<?php $MS->addMobileStyle(); $MS->setScale(); ?>
-		<link rel="stylesheet" href="css/font-awesome.min.css" />
-		<!--[if IE 7]>
-		<link rel="stylesheet" href="css/font-awesome-ie7.min.css">
-		<![endif]-->
+		<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
 		<link rel="icon" href="gfx/favicon.ico">
 		<?php echo $PHYLOBYTE->headArea;?>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
 		<meta name="author" content="Daniel Stephen Marcus" /> 
 		<meta name="keywords" content="Omni Impact Small Business Services, graphics, design, websites" /> 
 		<meta name="description" content="Omni Impact provides high quality and cost effective services for small and upstart businesses including website and graphics design, consultation, branding, and more." />
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="jqueryui_theme_phylobyte/jquery-ui-1.10.3.custom.min.css" />
 		<script type="text/javascript">
 		jQuery.noConflict();
 		</script>

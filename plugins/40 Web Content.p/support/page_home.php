@@ -28,12 +28,20 @@ $collectionsOptions = '';
 $collectionsSelect = '';
 
 foreach($items as $itemArray){
-	if($itemArray['i_type'] == 'item_pages' || $itemArray['i_type'] == 'item_entries'){
+	if($itemArray['i_type'] == 'item_pages'){
 		$collectionsOptions.='
-			<option value="in_item_'.$itemArray['id'].'">Item in '.$itemArray['i_name'].'</option>
+			<option value="in_item_'.$itemArray['id'].'">Item in Page Collection <i>"'.$itemArray['i_name'].'"</i></option>
 		';
 		$collectionsSelect.='
-			<option value="'.$itemArray['id'].'">In Collection '.$itemArray['i_name'].'</option>
+			<option value="'.$itemArray['id'].'">In Page Collection <i>"'.$itemArray['i_name'].'"</i></option>
+		';
+	}
+	if($itemArray['i_type'] == 'item_entries'){
+		$collectionsOptions.='
+			<option value="in_item_'.$itemArray['id'].'">Item in Entry Collection <i>"'.$itemArray['i_name'].'"</i></option>
+		';
+		$collectionsSelect.='
+			<option value="'.$itemArray['id'].'">In Entry Collection <i>"'.$itemArray['i_name'].'"</i></option>
 		';
 	}
 }
@@ -77,12 +85,19 @@ foreach($filteredItems as $itemArray){
 			}
 	}
 
+	$published = '';
+	if($itemArray['i_is_visible']){
+		$published = '<i class="icon-check">&nbsp;</i>';
+	}else{
+		$published = '';
+	}
+
 	$itemsListRows.='
 		<tr id="item_row_'.$itemArray['id'].'" class="table_row_normal" '.$cssRule.'>
 			<td style="text-align: center;"><input type="radio" name="item_selected_id" value="'.$itemArray['id'].'"
 			onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'item_row_'.$itemArray['id'].'\', \'table_row_normal\', \'table_row_highlight\');"
 			/></td>
-			<td>'.$indenter.$itemArray['i_name'].'</td>
+			<td>'.$indenter.$itemArray['i_name'].' &nbsp; '.$published.'</td>
 			<td>'.$parent.'</td>
 			<td>'.$type.'</td>
 			<td>'.$itemArray['i_weight'].'</td>
@@ -160,6 +175,8 @@ $this->pageArea.= '
 	<input type="submit" name="item_action" value="Filter" style="width: 10%; float: right; margin: 0;"/>
 
 	<hr />
+
+	<p>Published items are marked with a check <i class="icon-check">&nbsp;</i> symbol. Items must be published to be added to navigation.</p>
 
 		<table class="selTable">
 			<tr>

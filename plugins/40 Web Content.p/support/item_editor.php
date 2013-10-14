@@ -1,5 +1,31 @@
 <?php
 
+//a little javascript
+$this->pageArea.= '
+<script type="text/javascript">
+	var lastChangedName = null;
+
+	function changeClass(targetID, classA, classB){
+		var node = document.getElementById(targetID);
+		lastChangedName = targetID;
+		var currentClasses = node.className.split(\' \');
+		var currentFirstClass = currentClasses[0];
+		if(currentFirstClass == classA){
+			currentClasses[0] = classB;
+		}else if(currentFirstClass == classB){
+			currentClasses[0] = classA;
+		}
+		node.className = currentClasses.join(\' \');
+	}
+
+	function changeLast(classA, classB){
+		if(lastChangedName != null){
+			changeClass(lastChangedName, classA, classB);
+		}
+	}
+</script>
+';
+
 //Process
 
 if(stristr($_POST['item_action'], 'update') || stristr($_POST['item_action'], 'save') ){
@@ -89,7 +115,7 @@ tinymce.init({
          "table contextmenu paste textcolor"
    ],
    content_css: "css/content.css",
-   toolbar: "insertfile undo redo | styleselect | bold italic underline strikethrough superscript subscript | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
+   toolbar: "bold italic underline strikethrough superscript subscript forecolor backcolor styleselect | alignleft aligncenter alignright alignjustify outdent indent bullist numlist | link image undo redo",
    menubar: false
 });
 jQuery("#item_date_input").datepicker({
@@ -103,6 +129,67 @@ jQuery("#item_date_input").datepicker({
 		break;
 
 	case 'code':
+
+		$this->headArea .= '
+		<script type="text/javascript" src="../plugins/codemirror/codemirror.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_css.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_javascript.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_clike.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_xml.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_matchbrackets.js"></script>
+		<script type="text/javascript" src="../plugins/codemirror/codemirror_php.js"></script>
+		<link rel="stylesheet" href="../plugins/codemirror/codemirror.css" />
+		<style>.CodeMirror {border: 1px solid #000;}</style>
+		';
+
+		$editor.='
+
+<form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
+<input type="hidden" name="item_selected_id" value="'.$item['id'].'" />
+
+<label for="item_name">Item Name</label><input type="text" name="item_name" value="'.$item['i_name'].'"/><br/>
+<label for="item_description">Item Description</label><input type="text" name="item_description" value="'.$item['i_description'].'"/><br/>
+<label for="item_date">Publish Date</label><input type="text" name="item_date" value="'.$itemDate.'" id="item_date_input"/><br/>
+
+<textarea style="height: 520px;" name="item_content" id="item_content_codemirror">
+'.$item['i_content'].'
+</textarea>
+<br/>
+<input type="submit" name="item_action" value="Update With Edits"/>
+<input type="submit" name="item_action" value="Save Edits"/>
+
+	<hr/>
+<label for="item_cancel">&nbsp;</label><input type="submit" name="item_cancel" value="Cancel" />
+
+
+<div class="ff">&nbsp;</div>
+</form>
+
+<script>
+
+var myCodeMirror = CodeMirror.fromTextArea(document.getElementById("item_content_codemirror"), {
+	lineNumbers: true,
+	matchBrackets: true,
+	mode: "application/x-httpd-php",
+	indentUnit: 4,
+	indentWithTabs: true,
+	tabMode: "shift"
+});
+
+jQuery("#item_date_input").datepicker({
+	showButtonPanel: true,
+	dateFormat: "MM d, yy",
+	changeYear: true,
+	beforeShow: function(){
+		setTimeout(function (){
+			jQuery("#ui-datepicker-div").css("z-index","5");
+         }, 500);
+	}
+});
+
+</script>
+
+		';
 
 		break;
 
@@ -150,6 +237,49 @@ jQuery("#item_date_input").datepicker({
 		break;
 
 	case 'source':
+
+		// The directory we'll use for storing our code blocks
+		$dir = '../data/source_code/';
+
+		// If we don't have our folder yet, create it
+		if (!file_exists($dir)) {
+			if (mkdir($dir)) {
+				$this->messageAddNotification("Source Code directory created successfully.");
+			} else {
+				$this->messageAddError("There was a problem creating the Source Code directory, please refresh the page.");
+			}
+		}
+
+		$files = glob($dir . '*.php');
+		$fileNum = 0;
+		$selectedFile = -1;
+		foreach ($files as $file) {
+			$filename = substr(substr($file, strlen($dir)), 0, -4);
+			$desc_file = json_decode(file_get_contents($dir . $filename . '.dsc'));
+			if($item['i_content'] == $filename){
+				$selectedFile = $fileNum;
+			}
+			$sourceRows.='
+				<tr id="item_row_'.$fileNum.'" class="table_row_normal">
+					<td style="text-align: center;"><input type="radio" name="item_content" value="'.$filename.'" id="item_num_'.$fileNum.'"
+					onchange="changeLast(\'table_row_normal\', \'table_row_highlight\');changeClass(\'item_row_'.$fileNum.'\', \'table_row_normal\', \'table_row_highlight\');"
+					/></td>
+					<td>'.$filename.'</td>
+					<td>'.$desc_file->desc.'</td>
+				</tr>
+			';
+			$fileNum++;
+		}
+
+		$selectFileScript = '';
+		if($selectedFile != -1){
+			$selectFileScript = '
+			document.getElementById("item_num_'.$selectedFile.'").checked = true;
+			document.getElementById("item_num_'.$selectedFile.'").onchange();
+			';
+		}
+
+
 		$editor.='
 
 <form action="?'.$_SERVER['QUERY_STRING'].'" method="POST">
@@ -158,8 +288,13 @@ jQuery("#item_date_input").datepicker({
 <label for="item_name">Item Name</label><input type="text" name="item_name" value="'.$item['i_name'].'"/><br/>
 <label for="item_description">Item Description</label><input type="text" name="item_description" value="'.$item['i_description'].'"/><br/>
 <label for="item_date">Publish Date</label><input type="text" name="item_date" value="'.$itemDate.'" id="item_date_input"/><br/>
-<label for="item_content">Select Source Code</label><input type="text" name="item_content" value="'.$item['i_content'].'"/><br/>
 
+<table class="selTable">
+			<tr>
+				<th>Select</th><th>Source File</th><th>Description</th>
+			</tr>
+'.$sourceRows.'
+</table>
 
 <input type="submit" name="item_action" value="Update With Edits"/>
 <input type="submit" name="item_action" value="Save Edits"/>
@@ -177,13 +312,18 @@ jQuery("#item_date_input").datepicker({
 	dateFormat: "MM d, yy",
 	changeYear: true
 });
+'.$selectFileScript.'
 </script>
 		';
+
 
 		break;
 
 	default:
-
+//I don't know what to do with this
+phylobyte::messageAddAlert('The selected item does not contain editable content.');
+$_POST['item_selected_id'] = false;
+return;
 		break;
 }
 

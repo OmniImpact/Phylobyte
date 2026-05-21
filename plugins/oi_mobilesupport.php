@@ -52,23 +52,28 @@ class oi_mobilesupport{
 		//Has the user selected an override?
 		//
 		//There are three modes.
-		//	1 : No override selected
+		//	1 : No override selected (auto-detect)
 		//	2 : Mobile Forced
 		//	3 : Desktop Forced
 		
-		//if we aren't initialized, set the $_SESSION['mobileoverride']
-		//if(!isset($_SESSION['mobileoverride'])) $_SESSION['mobileoverride'] = '1';
+		// Initialize $_SESSION['mobileoverride'] if it's not set
+		if(!isset($_SESSION['mobileoverride'])) {
+			$_SESSION['mobileoverride'] = '1'; // Default to 'auto'
+		}
 		
-		//allow 'clear', 'auto', 'mobile', 'phone', 'desktop', 'full' to be used
-		if($_REQUEST['mobileoverride'] == 'auto' || $_REQUEST['mobileoverride'] == 'clear') $_REQUEST['mobileoverride'] = '1';
-		if($_REQUEST['mobileoverride'] == 'mobile' || $_REQUEST['phone'] == 'phone') $_REQUEST['mobileoverride'] = '2';
-		if($_REQUEST['mobileoverride'] == 'desktop' || $_REQUEST['mobileoverride'] == 'full') $_REQUEST['mobileoverride'] = '3';
-		
-		//check to see if the user is trying to SET an override
-		//it will be safe to set the session variable directly, because it is ONLY triggered if we already know
-		//that it is one of three safe values
-		if($_REQUEST['mobileoverride'] == '1' || $_REQUEST['mobileoverride'] == '2' || $_REQUEST['mobileoverride'] == '3'){
-			$_SESSION['mobileoverride'] = $_REQUEST['mobileoverride'];
+		// Check for mobileoverride in $_REQUEST
+		if(isset($_REQUEST['mobileoverride'])) {
+			$requestedOverride = $_REQUEST['mobileoverride'];
+			if($requestedOverride == 'auto' || $requestedOverride == 'clear') {
+				$_SESSION['mobileoverride'] = '1';
+			} elseif($requestedOverride == 'mobile' || $requestedOverride == 'phone') {
+				$_SESSION['mobileoverride'] = '2';
+			} elseif($requestedOverride == 'desktop' || $requestedOverride == 'full') {
+				$_SESSION['mobileoverride'] = '3';
+			}
+		} elseif (isset($_REQUEST['phone']) && $_REQUEST['phone'] == 'phone') {
+			// If mobileoverride is not set, but 'phone=phone' is, force mobile mode
+			$_SESSION['mobileoverride'] = '2';
 		}
 		
 		//is the user on a mobile device?
@@ -111,7 +116,7 @@ class oi_mobilesupport{
 		//we will need this later to generate a nice switch
 		$requestArray = null;
 		foreach($_GET as $GETkey => $GETvalue){
-			if($GETkey != 'mobileoverride'){
+			if($GETkey != 'mobileoverride' && $GETkey != 'phone'){
 				$requestArray[]= htmlentities($GETkey).'='.htmlentities($GETvalue);
 			}
 		}

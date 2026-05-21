@@ -3,13 +3,14 @@ class tinyRegistry{
 
 	private $registry = null;
 	private $dbObject;
-	
+
 	function __construct(){
-		if(count($_SESSION['dbinfo']) < 2){
+		if(!isset($_SESSION['dbinfo']) || count($_SESSION['dbinfo']) < 2){
 			if(is_file('../data/dbconfig.array')){
 				$_SESSION['dbinfo'] = unserialize(file_get_contents('../data/dbconfig.array'));
 			}else{
-				return false;
+				$this->dbObject = null; // Set dbObject to null to indicate failure
+				return; // Exit constructor
 			}
 		}
 		try{
@@ -19,9 +20,12 @@ class tinyRegistry{
 				}catch(PDOException $e){echo $e;}
 			}elseif($_SESSION['dbinfo']['dbt'] == 'Sequel Server'){
 				try{
-					//$sysinfo = posix_uname();
-					//$sequelServerDriver = ($sysinfo['sysname'] == 'Linux') ? 'FreeTDS' : '{SQL Server}' ;
 					$this->dbObject = new PDO("odbc:Driver={SQL Server};Server={$_SESSION['dbinfo']['dbh']};Database={$_SESSION['dbinfo']['dbn']}; Uid={$_SESSION['dbinfo']['dbu']};Pwd={$_SESSION['dbinfo']['dbp']};");
+				}catch(PDOException $e){echo $e;}
+			}elseif($_SESSION['dbinfo']['dbt'] == 'SQLite'){
+				try{
+					$absoluteDataDirPath = realpath(dirname(__FILE__) . '/../data/');
+					$this->dbObject = new PDO('sqlite:'.$absoluteDataDirPath.'/'. $_SESSION['dbinfo']['dbn']);
 				}catch(PDOException $e){echo $e;}
 			}
 		}catch(PDOException $e){echo $e;}
@@ -38,6 +42,13 @@ class tinyRegistry{
 		}
 		$this->registry = $registry;
 		try{
+			$autoIncrementKeyword = '';
+			if (isset($_SESSION['dbinfo']['dbt']) && $_SESSION['dbinfo']['dbt'] == 'MySQL') {
+				$autoIncrementKeyword = 'AUTO_INCREMENT';
+			}
+			// For SQLite, INTEGER PRIMARY KEY implicitly handles auto-increment,
+			// so no explicit AUTO_INCREMENT keyword is needed or desired for basic use.
+
 			if($_SESSION['dbinfo']['dbt'] == 'Sequel Server'){
 				$this->dbObject->exec("
 				IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='__REGISTRY__{$this->registry}')
@@ -47,7 +58,7 @@ class tinyRegistry{
 					value TEXT
 				);");
 			}else{
-			$this->dbObject->exec("CREATE TABLE IF NOT EXISTS __REGISTRY__{$this->registry}(id INTEGER PRIMARY KEY AUTO_INCREMENT, mykey TEXT, value TEXT);");
+			$this->dbObject->exec("CREATE TABLE IF NOT EXISTS __REGISTRY__{$this->registry}(id INTEGER PRIMARY KEY " . $autoIncrementKeyword . ", mykey TEXT, value TEXT);");
 			}
 			return true;
 		}catch(PDOException $e){
@@ -61,17 +72,36 @@ class tinyRegistry{
 	 * @return array
 	 **/
 	function registrylist(){
-		if($_SESSION['dbinfo']['dbt'] == 'Sequel Server'){
-			$list = $this->dbObject->prepare("SELECT * FROM sys.Tables WHERE name LIKE '__REGISTRY__%';"); //" WHERE name LIKE '__REGISTRY__%' ORDER BY name;");
-		}else{
-			$list = $this->dbObject->prepare("SHOW TABLES LIKE '__REGISTRY__%';"); //" WHERE name LIKE '__REGISTRY__%' ORDER BY name;");
+		if($this->dbObject == null){
+			return false;
 		}
-		
+		$sql = "";
+		$dbType = $_SESSION['dbinfo']['dbt'];
+
+		if($dbType == 'Sequel Server'){
+			$sql = "SELECT name FROM sys.Tables WHERE name LIKE '__REGISTRY__%';";
+		} elseif ($dbType == 'MySQL') {
+			$sql = "SHOW TABLES LIKE '__REGISTRY__%';";
+		} elseif ($dbType == 'SQLite') {
+			$sql = "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '__REGISTRY__%';";
+		} else {
+			// Default or error case, perhaps return empty array or throw exception
+			return [];
+		}
+
+		$list = $this->dbObject->prepare($sql);
 		$list->execute();
-		$currentResults = $list->fetchAll();
-		$results = null;
-		foreach($currentResults as $currentResult) {
-			$results[]['name'] = substr($currentResult[0], 12);
+		$currentResults = $list->fetchAll(PDO::FETCH_COLUMN); // Fetch only the column values
+		$results = []; // Initialize as an empty array
+
+		if (!empty($currentResults)) { // Check if there are any results
+			foreach($currentResults as $tableName) { // $tableName will directly be the table name string
+				// The substr(..., 12) assumes the prefix is exactly '__REGISTRY__'.
+				// We should ensure $tableName is a string before substr.
+				if (is_string($tableName) && strlen($tableName) >= 12) {
+					$results[]['name'] = substr($tableName, 12);
+				}
+			}
 		}
 		return $results;
 	}
@@ -82,6 +112,9 @@ class tinyRegistry{
 	 * @return boolean
 	 **/
 	function registrydrop($registryname){
+		if($this->dbObject == null){
+			return false;
+		}
 		$statement = $this->dbObject->exec("DROP TABLE __REGISTRY__$registryname;");
 		return true;
 	}
@@ -100,32 +133,42 @@ class tinyRegistry{
 		$key = $this->dbObject->quote($key);
 		$value = $this->dbObject->quote($value);
 		if($this->registry == null) return false;
-			$statement = $this->dbObject->prepare("SELECT * FROM __REGISTRY__{$this->registry} WHERE mykey=$key;");
-			$statement->execute();
-			$resultsArray = $statement->fetchAll();
-			$resultsArray = $resultsArray[0];
+
+		$statement = $this->dbObject->prepare("SELECT * FROM __REGISTRY__{$this->registry} WHERE mykey=$key;");
+		$statement->execute();
+		$existingRecord = $statement->fetchAll();
+
+		// Check if a record was found
+		$foundRecord = null;
+		if (!empty($existingRecord)) {
+			$foundRecord = $existingRecord[0];
+		}
+
 		if($overwrite === false){ //check if there is already a value
-			if($resultsArray['id'] != null){
+			if($foundRecord !== null){ // If a record was found, do not overwrite
 				return false;
-			}else{
+			}else{ // No record found, insert new
 				$this->dbObject->exec("INSERT INTO __REGISTRY__{$this->registry} (mykey, value) VALUES ($key,$value);");
 				return true;
 			}
-		}else{
-			if($resultsArray['id'] != null){
+		}else{ // Overwrite is true, or no record exists
+			if($foundRecord !== null){ // Record found, update it
 				$this->dbObject->exec("UPDATE __REGISTRY__{$this->registry} SET value=$value WHERE mykey=$key;");
 				return true;
-			}else{
+			}else{ // No record found, insert new
 				$this->dbObject->exec("INSERT INTO __REGISTRY__{$this->registry} (mykey, value) VALUES ($key, $value);");
 				return true;
-			} 
+			}
 		}
 	}
 
 	function pull($result = true, $id=null, $filter='%', $order='DESC', $limit='500'){
+		if($this->dbObject == null){
+			return false;
+		}
 		if($this->registry == null) return false;
 		//if id is null, use filter otherwise use provided id
-		//result true returns array, false, deletes items that match, string returns template		
+		//result true returns array, false, deletes items that match, string returns template
 		if(ctype_digit($id)){
 			$pull = $this->dbObject->prepare("SELECT * FROM __REGISTRY__{$this->registry} WHERE id='$id' LIMIT $limit;");
 		}else{
@@ -152,11 +195,14 @@ class tinyRegistry{
 				$current = str_replace('%v%', $resultItem['value'], $current);
 				$returnString.= $current;
 			}
-			return $returnString;
+			return $returnString ?? ''; // Ensure a string is always returned
 		}
 	}
 
 	function pullquery($result = true, $query = null){
+		if($this->dbObject == null){
+			return false;
+		}
 		if($this->registry == null) return false;
 		//if id is null, use filter otherwise use provided id
 		//result true returns array, false, deletes items that match, string returns template
@@ -164,6 +210,7 @@ class tinyRegistry{
 		$pull->execute();
 
 		$currentResults = $pull->fetchAll();
+		$results = []; // Initialize $results as an empty array
 
 		foreach($currentResults as $currentResult) {
 			$results[] = $currentResult;
@@ -180,7 +227,7 @@ class tinyRegistry{
 					$returnString.= $current;
 				}
 			}
-			return $returnString;
+			return $returnString ?? ''; // Ensure a string is always returned
 		}
 	}
 

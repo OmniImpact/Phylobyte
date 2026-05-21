@@ -1,10 +1,10 @@
 <?php
 //breadcrumbs
-$this->breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?phylobyte=settings">Settings</a>';
+self::$breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?phylobyte=settings">Settings</a>';
 
 //process
 
-if($_POST['db_submit'] == 'Save Configuration'){
+if(isset($_POST['db_submit']) && $_POST['db_submit'] == 'Save Configuration'){
 
 	$dbt = stripslashes($_POST['p_dbt']);
 	$dbh = stripslashes($_POST['p_dbh']);
@@ -17,44 +17,44 @@ if($_POST['db_submit'] == 'Save Configuration'){
 	if($dbt == 'MySQL'){
 		try{
 			$testDB = new PDO('mysql:host='.$dbh.';dbname='.$dbn, $dbu, $dbp);
-			$this->messageAddNotification('Successfully connected to MySQL database. Saving configuration.');
-			file_put_contents('../data/dbconfig.array', serialize(Array('dbt' => $dbt, 'dbh' => $dbh, 'dbn' => $dbn, 'dbu' => $dbu, 'dbp' => $dbp)));
-			$this->messageAddAlert('You need to log out for changes to take effect.');
+			self::messageAddNotification('Successfully connected to MySQL database. Saving configuration.');
+			file_put_contents(__DIR__ . '/../data/dbconfig.array', serialize(Array('dbt' => $dbt, 'dbh' => $dbh, 'dbn' => $dbn, 'dbu' => $dbu, 'dbp' => $dbp)));
+			self::messageAddAlert('You need to log out for changes to take effect.');
 		}catch(PDOException $e){
-			$this->messageAddDebug('Failed to open database: '.$e);
+			self::messageAddDebug('Failed to open database: '.$e); // Removed debugging message
 		}
 	}else{
-		$this->messageAddError('Could not understand database type.');
+		self::messageAddError('Could not understand database type.');
 	}
 }
 
 //are we trying to toggle a page?
 if(isset($_GET['toggle'])){
-	$pluginId = $this->phylobyteDB->quote($_GET['toggle']);
-	
+	$pluginId = self::$phylobyteDB->quote($_GET['toggle']);
+
 	//get current plugin info
 	//ok, we are ready to build some navigation
-	$pluginQuery = $this->phylobyteDB->prepare("
+	$pluginQuery = self::$phylobyteDB->prepare("
 		SELECT * FROM p_plugins WHERE id=$pluginId;
 	");
 	$pluginQuery->execute();
 	$pluginArray = $pluginQuery->fetchAll(PDO::FETCH_ASSOC);
 	$pluginArray = $pluginArray[0];
-	
+
 	if($pluginArray['enabled'] == 'true'){
 		//disable the plugin
-		$this->messageAddNotification('Disabling '.$pluginArray['name']);
-		$this->phylobyteDB->exec("
+		self::messageAddNotification('Disabling '.$pluginArray['name']);
+		self::$phylobyteDB->exec("
 			UPDATE p_plugins SET enabled='false' WHERE id=$pluginId;
 		");
 	}else{
 		//enable the plugin
-		$this->messageAddNotification('Enabling '.$pluginArray['name']);
-		$this->phylobyteDB->exec("
+		self::messageAddNotification('Enabling '.$pluginArray['name']);
+		self::$phylobyteDB->exec("
 			UPDATE p_plugins SET enabled='true' WHERE id=$pluginId;
 		");
 	}
-	
+
 }
 
 //a little stye
@@ -104,43 +104,47 @@ $this->docArea.='
 ';
 
 //get a list of the available plugins
-$pluginDirArray = scandir('../plugins');
+$pluginDirArray = scandir(__DIR__ . '/../plugins');
 
-$pluginsEnabledQuery = $this->phylobyteDB->prepare("
+$pluginsEnabledQuery = self::$phylobyteDB->prepare("
 	SELECT * FROM p_plugins WHERE enabled='true' ORDER BY weight;
 ");
 $pluginsEnabledQuery->execute();
 $pluginsEnabledArray = $pluginsEnabledQuery->fetchAll(PDO::FETCH_ASSOC);
 
-$pluginsDisabledQuery = $this->phylobyteDB->prepare("
+$pluginsDisabledQuery = self::$phylobyteDB->prepare("
 	SELECT * FROM p_plugins WHERE enabled='false' ORDER BY weight;
 ");
 $pluginsDisabledQuery->execute();
 $pluginsDisabledArray = $pluginsDisabledQuery->fetchAll(PDO::FETCH_ASSOC);
 
+// Initialize variables to prevent "Undefined variable" warnings
+$onPluginsList = '';
+$offPluginsList = '';
+
 foreach($pluginsEnabledArray as $enabledPlugin) {
-	if(is_dir('../plugins/'.$enabledPlugin['weight'].' '.$enabledPlugin['name'].'.p') ){
+	if(is_dir(__DIR__ . '/../plugins/'.$enabledPlugin['weight'].' '.$enabledPlugin['name'].'.p') ){
 		//now we make sure the plugin has the minimal requirements
 		$pluginDir = $enabledPlugin['weight'].' '.$enabledPlugin['name'].'.p';
 		$pluginName = $enabledPlugin['name'];
-		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+		if(is_file(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$onPluginsList.='
 			
 			<tr><td><strong>'.$pluginName.'</strong></td>';
 				//if there is just one other page, we must make subnav.
-				$currentPluginDirArray = scandir('../plugins/'.$pluginDir);
+				$currentPluginDirArray = scandir(__DIR__ . '/../plugins/'.$pluginDir);
 				$functionsArray = null;
 				foreach($currentPluginDirArray as $possibleFunction) {
 					if(substr($possibleFunction, -4) == '.php' && $possibleFunction != $pluginName.'.php'){
-						if(substr($pluginDir, 0, -3) == $_GET['plugin']) $this->pluginFunctions[] = $possibleFunction;
+						if(isset($_GET['plugin']) && substr($pluginDir, 0, -3) == $_GET['plugin']) $this->pluginFunctions[] = $possibleFunction;
 						$functionsArray[] = substr($possibleFunction, 0, -4);
 					}
 				}
 				if(sizeof($functionsArray) > 0){
 					$onPluginsList.='<td>';
-					if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
-						$onPluginsList.='<em>'.file_get_contents('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em><hr style="margin: 0; width: 100%; margin-top: .5em;"/>';
+					if(is_file(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
+						$onPluginsList.='<em>'.file_get_contents(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em><hr style="margin: 0; width: 100%; margin-top: .5em;"/>';
 					}
 					$onPluginsList.='<ul>';
 					foreach($functionsArray as $function) {
@@ -148,8 +152,8 @@ foreach($pluginsEnabledArray as $enabledPlugin) {
 					}
 					$onPluginsList.='</ul></td>';
 				}else{
-					if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
-						$onPluginsList.='<td><em>'.file_get_contents('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em></td>';
+					if(is_file(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
+						$onPluginsList.='<td><em>'.file_get_contents(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em></td>';
 					}else{
 						$onPluginsList.='<td>This plugin does not provide a description.</td>';
 					}
@@ -164,28 +168,28 @@ foreach($pluginsEnabledArray as $enabledPlugin) {
 }
 
 foreach($pluginsDisabledArray as $disabledPlugin) {
-	if(is_dir('../plugins/'.$disabledPlugin['weight'].' '.$disabledPlugin['name'].'.p')){
+	if(is_dir(__DIR__ . '/../plugins/'.$disabledPlugin['weight'].' '.$disabledPlugin['name'].'.p')){
 		//now we make sure the plugin has the minimal requirements
 		$pluginDir = $disabledPlugin['weight'].' '.$disabledPlugin['name'].'.p';
 		$pluginName = $disabledPlugin['name'];
-		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+		if(is_file(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
 			//we have the minimal plugin setup, so we can now generate navigation
 			$offPluginsList.='
 			
 			<tr><td><strong>'.$pluginName.'</strong></td>';
 				//if there is just one other page, we must make subnav.
-				$currentPluginDirArray = scandir('../plugins/'.$pluginDir);
+				$currentPluginDirArray = scandir(__DIR__ . '/../plugins/'.$pluginDir);
 				$functionsArray = null;
 				foreach($currentPluginDirArray as $possibleFunction) {
 					if(substr($possibleFunction, -4) == '.php' && $possibleFunction != $pluginName.'.php'){
-						if(substr($pluginDir, 0, -3) == $_GET['plugin']) $this->pluginFunctions[] = $possibleFunction;
+						if(isset($_GET['plugin']) && substr($pluginDir, 0, -3) == $_GET['plugin']) $this->pluginFunctions[] = $possibleFunction;
 						$functionsArray[] = substr($possibleFunction, 0, -4);
 					}
 				}
 				if(sizeof($functionsArray) > 0){
 					$offPluginsList.='<td>';
-					if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
-						$offPluginsList.='<em>'.file_get_contents('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em><hr style="margin: 0; width: 100%; margin-top: .5em;"/>';
+					if(is_file(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
+						$offPluginsList.='<em>'.file_get_contents(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em><hr style="margin: 0; width: 100%; margin-top: .5em;"/>';
 					}
 					$offPluginsList.='<ul>';
 					foreach($functionsArray as $function) {
@@ -193,8 +197,8 @@ foreach($pluginsDisabledArray as $disabledPlugin) {
 					}
 					$offPluginsList.='</ul></td>';
 				}else{
-					if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
-						$offPluginsList.='<td><em>'.file_get_contents('../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em></td>';
+					if(is_file(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc')){
+						$offPluginsList.='<td><em>'.file_get_contents(__DIR__ . '/../plugins/'.$pluginDir.'/'.$pluginName.'.dsc').'</em></td>';
 					}else{
 						$offPluginsList.='<td>This plugin does not provide a description.</td>';
 					}
@@ -217,7 +221,7 @@ $this->pageArea.='
 		<tr>
 			<th>Plugin Name</th><th>Description and Functions</th><th>Toggle</th>
 		</tr>
-		'.$onPluginsList.'
+		'. $onPluginsList .'
 	</table>
 	
 	<h3>Disabled Plugins</h3>
@@ -225,7 +229,7 @@ $this->pageArea.='
 		<tr>
 			<th>Plugin Name</th><th>Description and Functions</th><th>Toggle</th>
 		</tr>
-		'.$offPluginsList.'
+		'. $offPluginsList .'
 	</table>
 	
 	</form>
@@ -240,13 +244,13 @@ $this->pageArea.='
 
 	<label for="p_dbt">Database Type</label>
 	<select name="p_dbt">
-		<option value="'.$this->sessionDbInfo['dbt'].'">Keep '.$this->sessionDbInfo['dbt'].'</option>
+		<option value="'.(self::$sessionDbInfo['dbt'] ?? '').'">Keep '.(self::$sessionDbInfo['dbt'] ?? '').'</option>
 		<option value="MySQL">MySQL</option>
 	</select><br/>
-	<label for="p_dbh">Database Host</label><input type="text" name="p_dbh" value="'.$this->sessionDbInfo['dbh'].'"/><br/>
-	<label for="p_dbn">Database Name</label><input type="text" name="p_dbn" value="'.$this->sessionDbInfo['dbn'].'"/><br/>
-	<label for="p_dbu">User Name</label><input type="text" name="p_dbu" value="'.$this->sessionDbInfo['dbu'].'"/><br/>
-	<label for="p_dbp">Password</label><input type="password" name="p_dbp" value="'.$this->sessionDbInfo['dbp'].'"/><br/>
+	<label for="p_dbh">Database Host</label><input type="text" name="p_dbh" value="'.(self::$sessionDbInfo['dbh'] ?? '').'"/><br/>
+	<label for="p_dbn">Database Name</label><input type="text" name="p_dbn" value="'.(self::$sessionDbInfo['dbn'] ?? '').'"/><br/>
+	<label for="p_dbu">User Name</label><input type="text" name="p_dbu" value="'.(self::$sessionDbInfo['dbu'] ?? '').'"/><br/>
+	<label for="p_dbp">Password</label><input type="password" name="p_dbp" value="'.(self::$sessionDbInfo['dbp'] ?? '').'"/><br/>
 
 		<input type="submit" name="db_submit" value="Save Configuration" style="width: 14em; margin-left: 70%;" />
 		<div class="ff">&nbsp;</div>

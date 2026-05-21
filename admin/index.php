@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
 include('../plugins/phylobyte_tr.php');
 $GLOBALS['MESSAGES'] = new tinyRegistry;
@@ -8,6 +10,8 @@ include('../plugins/oi_mobilesupport.php');
 $MS = new oi_mobilesupport;
 $GLOBALS['MS'] = $MS;
 $GLOBALS['PHYLOBYTE'] = new phylobyte;
+
+$PHYLOBYTE = $GLOBALS['PHYLOBYTE']; // Assign to local variable for convenience
 $PHYLOBYTE->build_finish();
 
 //display
@@ -22,15 +26,15 @@ $PHYLOBYTE->build_finish();
 		<link href="css/oi_reset.css" rel="stylesheet" type="text/css" /> 
 		<link href="css/style.css" rel="stylesheet" type="text/css" />
 		<?php $MS->addMobileStyle(); $MS->setScale(); ?>
-		<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/fontawesome.min.css" integrity="sha384-NvKbDTEnL+A8F/AA5Tc5kmMLSJHUO868P+lDtTpJIeQdGYaUIuLr4lVGOEA1OcMy" crossorigin="anonymous">
 		<link rel="icon" href="gfx/favicon.ico">
-		<?php echo $PHYLOBYTE->headArea;?>
+		<?php echo phylobyte::$headArea;?>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
 		<meta name="author" content="Daniel Stephen Marcus" /> 
 		<meta name="keywords" content="Omni Impact Small Business Services, graphics, design, websites" /> 
 		<meta name="description" content="Omni Impact provides high quality and cost effective services for small and upstart businesses including website and graphics design, consultation, branding, and more." />
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.14.2/jquery-ui.min.js"></script>
 		<link rel="stylesheet" href="jqueryui_theme_phylobyte/jquery-ui-1.10.3.custom.min.css" />
 		<script type="text/javascript">
 		jQuery.noConflict();
@@ -52,7 +56,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 </div>
 </div>
 	<div id="dropdown">
-		<?php echo $PHYLOBYTE->navigationArea;?>
+		<?php echo phylobyte::$navigationArea;?>
 	<div style="float: none; clear: both; height: 0; overflow: hidden;">&nbsp;</div>
 	</div>
 </div>
@@ -95,7 +99,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 	</script>
 	<?php } ?>
 	<div class="pluginbox home">
-		<?php if($PHYLOBYTE->breadcrumbs != null) echo '<div class="breadcrumbs">'.$PHYLOBYTE->breadcrumbs.'</div>';?>
+		<?php if(phylobyte::$breadcrumbs != null) echo '<div class="breadcrumbs">'.phylobyte::$breadcrumbs.'</div>';?>
 		<div class="padding">
 		<?php echo $PHYLOBYTE->pageArea;?>
 		</div>
@@ -109,7 +113,7 @@ date('l F jS, Y').'&nbsp;&nbsp;&nbsp;&nbsp;'.date('g:i ').'<span style="font-siz
 		<?php echo $PHYLOBYTE->docArea;?>
 	</div>
 </div>
-<?php }else{ echo($PHYLOBYTE->mobileNav); }?>
+<?php }else{ echo(phylobyte::$mobileNav); }?>
 
 <div style="float: none; clear: both; height: 0; overflow: hidden;">&nbsp;</div>
 <div class="footer">

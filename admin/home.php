@@ -23,25 +23,32 @@ Phylobyte Version 0.8 (Beta)</h3>
 <div style="margin: 1em;  text-align: center;">
 ';
 
-$pluginQuery = $this->phylobyteDB->prepare("
-	SELECT * FROM p_plugins WHERE enabled='true' ORDER BY weight;
-");
-$pluginQuery->execute();
-$pluginArray = $pluginQuery->fetchAll(PDO::FETCH_ASSOC);
+// Check if the database connection is established before proceeding
+if (phylobyte::$phylobyteDB !== null) {
+	$pluginQuery = phylobyte::$phylobyteDB->prepare("
+		SELECT * FROM p_plugins WHERE enabled='true' ORDER BY weight;
+	");
+	$pluginQuery->execute();
+	$pluginArray = $pluginQuery->fetchAll(PDO::FETCH_ASSOC);
 
-foreach($pluginArray as $plugin) {
-	//now we make sure the plugin has the minimal requirements
-	$pluginDir = $plugin['weight'].' '.$plugin['name'].'.p';
-	$pluginName = $plugin['name'];
-	if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
-		//we have the minimal plugin setup, so we can now generate navigation
-		$this->pageArea.='
-		<a href="?plugin='.substr($pluginDir, 0, -2).'" class="headertext"
-		style="position: relative; display: block; float: left;
-		padding: .5em; color: white; font-size: 14pt;
-		text-shadow: 1px 1px 2pt black; margin: .5em;">'.$pluginName.'</a>';
+	foreach($pluginArray as $plugin) {
+		//now we make sure the plugin has the minimal requirements
+		$pluginDir = $plugin['weight'].' '.$plugin['name'].'.p';
+		$pluginName = $plugin['name'];
+		if(is_file('../plugins/'.$pluginDir.'/'.$pluginName.'.php')){
+			//we have the minimal plugin setup, so we can now generate navigation
+			$this->pageArea.='
+			<a href="?plugin='.substr($pluginDir, 0, -2).'" class="headertext"
+			style="position: relative; display: block; float: left;
+			padding: .5em; color: white; font-size: 14pt;
+			text-shadow: 1px 1px 2pt black; margin: .5em;">'.$pluginName.'</a>';
+		}
 	}
+} else {
+	// Display an error message or handle the case where the database is not connected
+	$this->pageArea .= '<div class="error">Database not connected. Unable to load plugins.</div>';
 }
+
 
 $this->pageArea.= '
 <div class="ff">&nbsp;</div>

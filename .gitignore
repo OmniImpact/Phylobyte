@@ -18,3 +18,5 @@ dbconfig.array
 *.log
 *.orig
 data/imgcache/*
+
+data/phylobyte.sqlite

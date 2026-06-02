@@ -1,25 +1,25 @@
 <?php
 
-if(($_POST['g_submit'] == 'Add Group' || $_POST['g_submit'] == 'Save Group') && trim(stripslashes($_POST['g_name'])) != null ){
+if(isset($_POST['g_submit']) && ($_POST['g_submit'] == 'Add Group' || $_POST['g_submit'] == 'Save Group') && trim(stripslashes($_POST['g_name'])) != null ){
 	$GLOBALS['UGP']->group_put(Array(
-		'id' => stripslashes($_POST['g_groupid']),
+		'id' => isset($_POST['g_groupid']) ? stripslashes($_POST['g_groupid']) : null,
 		'name' => stripslashes($_POST['g_name']),
-		'description' => stripslashes($_POST['g_desc']),
+		'description' => isset($_POST['g_desc']) ? stripslashes($_POST['g_desc']) : null,
 	));
 }
 
-if($_POST['g_submit'] == 'Delete Group'){
+if(isset($_POST['g_submit']) && $_POST['g_submit'] == 'Delete Group'){
 	$GLOBALS['UGP']->group_delete(stripslashes($_POST['g_groupid']));
 	$_POST['g_action'] = 'delete';
 }
 
-if($_POST['g_submit'] == 'Delete Attribute'){
+if(isset($_POST['g_submit']) && $_POST['g_submit'] == 'Delete Attribute'){
 	$gid = stripslashes($_POST['g_groupid']);
 	$id = stripslashes($_POST['g_attributeid']);
 	$GLOBALS['UGP']->group_attributesGet($id, false);
 }
 
-if($_POST['g_submit'] == 'Add Attribute'){
+if(isset($_POST['g_submit']) && $_POST['g_submit'] == 'Add Attribute'){
 	$gid = stripslashes($_POST['g_groupid']);
 	$attribute = stripslashes($_POST['g_attribute']);
 	$default = stripslashes($_POST['g_default']);
@@ -52,9 +52,9 @@ $this->pageArea.= '
 </script>
 ';
 
-if( $_POST['g_action'] == 'edit' && ctype_digit($_POST['g_groupid']) ){
+if( isset($_POST['g_action']) && $_POST['g_action'] == 'edit' && isset($_POST['g_groupid']) && ctype_digit($_POST['g_groupid']) ){
 
-	$this->breadcrumbs.=' &raquo; Edit Group';
+	phylobyte::$breadcrumbs.=' &raquo; Edit Group';
 
 	$group = $GLOBALS['UGP']->group_get($_POST['g_groupid']);
 

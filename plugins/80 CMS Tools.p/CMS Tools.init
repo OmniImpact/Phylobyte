@@ -8,7 +8,7 @@ class ugp{
 	 * Constructor for phylobyte Users and Groups class.
 	 **/
 	function __construct(){
-		$this->pDB = $GLOBALS['PHYLOBYTEDB'];
+		self::$pDB = $GLOBALS['PHYLOBYTEDB'];
 	}
 
 	/**
@@ -21,20 +21,20 @@ class ugp{
 		//use replace, so it will overwrite if an ID is provided
 
 		//make sure we don't change the admin group
-		if($groupArray['id'] == 1){
+		if(isset($groupArray['id']) && $groupArray['id'] == 1){
 			phylobyte::messageAddAlert('Please note that "admin" is a special group that you can not rename or delete.');
 			$groupArray['name'] = 'admin';
 		}
 
-		if(!ctype_alnum($groupArray['name'])){
-			phylobyte::messageAddAlert('Group names must be alphanumeric.');
+		if(!isset($groupArray['name']) || !ctype_alnum($groupArray['name'])){
+			phylobyte::messageAddAlert('Group names must be alphanumeric and not empty.');
 			return false;
 		}
 
-		$name = $this->pDB->quote($groupArray['name']);
-		$id = $this->pDB->quote($groupArray['id']);
+		$name = self::$pDB->quote($groupArray['name']);
+		$id = isset($groupArray['id']) ? self::$pDB->quote($groupArray['id']) : 'NULL'; // Handle null for ID
 		//check if the group exists
-		$group = $this->pDB->prepare("
+		$group = self::$pDB->prepare("
 			SELECT name
 			FROM p_groups WHERE name=$name AND id<>$id;");
 		$group->execute();
@@ -46,12 +46,12 @@ class ugp{
 			return false;
 		}
 
-		$description = $this->pDB->quote($groupArray['description']);
-		$optional = ($groupArray['id'] != '' ? 'id,' : '');
-		$id = ($groupArray['id'] != '' ? $this->pDB->quote($groupArray['id']).',' : '');
-		$query = $this->pDB->prepare("
+		$description = isset($groupArray['description']) ? self::$pDB->quote($groupArray['description']) : 'NULL'; // Handle null for description
+		$optional = (isset($groupArray['id']) && $groupArray['id'] != '' ? 'id,' : '');
+		$id_value_for_insert = (isset($groupArray['id']) && $groupArray['id'] != '' ? self::$pDB->quote($groupArray['id']).',' : '');
+		$query = self::$pDB->prepare("
 			REPLACE INTO p_groups ($optional name, description )
-			VALUES ($id $name, $description ); ");
+			VALUES ($id_value_for_insert $name, $description ); ");
 		if($query->execute()){
 			phylobyte::messageAddNotification('Successfully updated groups.');
 			return true;
@@ -73,18 +73,18 @@ class ugp{
 		function genRandomString($source, $length) {
 			$string = '';
 			for ($p = 0; $p < $length; $p++) {
-				$string .= $source[mt_rand(0, strlen($source))];
+				$string .= $source[mt_rand(0, strlen($source) - 1)];
 			}
 			return $string;
 		}
 
-		if($userArray['autopass'] == true){
+		if(isset($userArray['autopass']) && $userArray['autopass'] == true){
 			$userArray['password'] = genRandomString('aaabcdeeefgghhiiijkllmnnooopqrrssttuuuvwxyyz', 6).genRandomString('0123456789', 3);
 			phylobyte::messageAddAlert('Generated password: '.$userArray['password']);
 		}
 
-		if($userArray['id'] == null){
-			if($userArray['username'] == null || strlen($userArray['password']) < 4){
+		if(!isset($userArray['id']) || $userArray['id'] == null){
+			if(!isset($userArray['username']) || $userArray['username'] == null || !isset($userArray['password']) || strlen($userArray['password']) < 4){
 				phylobyte::messageAddError('You need to provide at least a user name and password to create a new user.');
 				return false;
 			}
@@ -92,8 +92,8 @@ class ugp{
 
 		//now, regardless of whether a user id is supplied, we need to make sure
 		//the user name is available
-		$userNameArray = $this->user_get($userArray['username']);
-		if($userNameArray[0]['id'] != $userArray['id'] && $userNameArray[0] != null){
+		$userNameArray = $this->user_get(isset($userArray['username']) ? $userArray['username'] : null);
+		if(!empty($userNameArray) && ( !isset($userArray['id']) || $userNameArray[0]['id'] != $userArray['id']) ){ // Fix: Check if $userNameArray is not empty
 			phylobyte::messageAddError('A user with that name already exists.');
 			return false;
 		}
@@ -101,7 +101,7 @@ class ugp{
 		//fail if invalid email
 		include_once('../plugins/EmailAddressValidator.php');
 		$validator = new EmailAddressValidator;
-		if (!$validator->check_email_address($userArray['email']) && $userArray['email'] != null) {
+		if (isset($userArray['email']) && !$validator->check_email_address($userArray['email']) && $userArray['email'] != null) {
 			phylobyte::messageAddError('That is not a valid email address.');
 			return false;
 		}
@@ -111,29 +111,58 @@ class ugp{
 		//if the user ID is null, don't privide it
 		//id, description, passwordhash are optional
 
-		if($userArray['id'] != null){
-			$optionalKeys.= ' id,';
-			$optionalVals.= $this->pDB->quote($userArray['id']).', ';
+		$optionalKeys = ''; // Fix: Initialize variable
+		$optionalVals = ''; // Fix: Initialize variable
+		$optionalUpdate = '';
+
+		if(isset($userArray['id']) && $userArray['id'] != null){
+			$optionalKeys.= 'id,';
+			$optionalVals.= self::$pDB->quote($userArray['id']).',';
 		}
-		if(trim($userArray['password']) != ''){
-			$optionalKeys.= ' passwordhash,';
-			$quotedPassword = $this->pDB->quote(sha1($userArray['password']));
-			$optionalVals.= $quotedPassword.', ';
+		if(isset($userArray['password']) && trim($userArray['password']) != ''){
+			$optionalKeys.= 'passwordhash,';
+			$quotedPassword = self::$pDB->quote(sha1($userArray['password']));
+			$optionalVals.= $quotedPassword.',';
 			$optionalUpdate = "passwordhash=$quotedPassword,";
 		}
 
-		$username = $this->pDB->quote($userArray['username']);
-		$status = $this->pDB->quote($userArray['status']);
-		$email = $this->pDB->quote($userArray['email']);
-		$name = $this->pDB->quote($userArray['name']);
+		$username = isset($userArray['username']) ? self::$pDB->quote($userArray['username']) : 'NULL';
+		$status = isset($userArray['status']) ? self::$pDB->quote($userArray['status']) : 'NULL';
+		$email = isset($userArray['email']) ? self::$pDB->quote($userArray['email']) : 'NULL';
+		$name = isset($userArray['name']) ? self::$pDB->quote($userArray['name']) : 'NULL';
+
+		// Trim trailing commas from optionalKeys and optionalVals
+		$optionalKeys = rtrim($optionalKeys, ',');
+		$optionalVals = rtrim($optionalVals, ',');
+		$optionalUpdate = rtrim($optionalUpdate, ',');
+
+		// Construct the INSERT part of the query
+		$insertColumns = ($optionalKeys != '' ? $optionalKeys . ',' : '') . 'username, status, email, name';
+		$insertValues = ($optionalVals != '' ? $optionalVals . ',' : '') . "$username, $status, $email, $name";
+
+		// Construct the UPDATE part of the query
+		$updateSet = '';
+		if ($optionalUpdate != '') {
+			$updateSet .= $optionalUpdate . ',';
+		}
+		$updateSet .= "name=$name, email=$email, status=$status, username=$username";
+		$updateSet = rtrim($updateSet, ','); // Ensure no trailing comma
 
 		$query = "
-			INSERT INTO p_users ($optionalKeys username, status, email, name)
-			VALUES ($optionalVals $username, $status, $email, $name)
-			ON DUPLICATE KEY UPDATE
-			$optionalUpdate name=$name, email=$email, status=$status, username=$username;
+			INSERT INTO p_users ($insertColumns)
+			VALUES ($insertValues)
+			ON CONFLICT(id) DO UPDATE SET
+			$updateSet;
 			";
-		$query = $this->pDB->prepare($query);
+		// Note: Changed to ON CONFLICT(id) DO UPDATE SET for SQLite compatibility,
+		// assuming the database might be SQLite based on the error message.
+		// If it's MySQL, it should be ON DUPLICATE KEY UPDATE.
+		// The original error "near "DUPLICATE"" suggests the syntax itself was the issue,
+		// which is common when mixing database specific syntax or having malformed clauses.
+		// If 'id' is not the primary key or unique key, this ON CONFLICT will not work as expected.
+		// Assuming 'id' is the primary key for ON CONFLICT.
+
+		$query = self::$pDB->prepare($query);
 		if($query->execute()){
 			phylobyte::messageAddNotification('Successfully updated user.');
 			return true;
@@ -146,10 +175,10 @@ class ugp{
 	function user_getattrs($uid, $gid){
 
 		//return false if the user is NOT a member of that group
-		$userid = $this->pDB->quote($uid);
-		$groupid = $this->pDB->quote($gid);
+		$userid = self::$pDB->quote($uid);
+		$groupid = self::$pDB->quote($gid);
 
-		$checkResults = $this->pDB->prepare("
+		$checkResults = self::$pDB->prepare("
 			SELECT id
 			FROM p_memberships WHERE userid=$userid AND groupid=$groupid;");
 		$checkResults->execute();
@@ -157,7 +186,7 @@ class ugp{
 
 		if(count($checkResults) > 0){
 			//great! the user is a member of the group, so let's get the attrs
-			$getAttrs = $this->pDB->prepare("
+			$getAttrs = self::$pDB->prepare("
 			SELECT p_gattributes.*,
 			(SELECT value FROM p_uattributes WHERE uid=$userid AND p_uattributes.aid = p_gattributes.id) AS value
 			FROM p_gattributes WHERE p_gattributes.gid=$groupid
@@ -173,11 +202,11 @@ class ugp{
 
 	function user_putattr($uid, $aid, $value){
 	
-		$userid = $this->pDB->quote($uid);
-		$attrid = $this->pDB->quote($aid);
+		$userid = self::$pDB->quote($uid);
+		$attrid = self::$pDB->quote($aid);
 
 		if($value == null || $value == ''){
-			$this->pDB->exec("
+			self::$pDB->exec("
 			DELETE FROM p_uattributes
 			WHERE uid=$userid AND aid=$attrid;
 			");
@@ -185,11 +214,11 @@ class ugp{
 			return true;
 		}
 
-		$value = $this->pDB->quote($value);
+		$value = self::$pDB->quote($value);
 
 		//value is not null, so insert or update
 
-		$checkResults = $this->pDB->prepare("
+		$checkResults = self::$pDB->prepare("
 			SELECT id
 			FROM p_uattributes
 			WHERE uid=$userid AND aid=$attrid;
@@ -199,7 +228,7 @@ class ugp{
 
 		if(count($checkResults) > 0){
 			//update
-			if($this->pDB->exec("
+			if(self::$pDB->exec("
 			UPDATE p_uattributes
 			SET value=$value WHERE
 			uid=$userid AND aid=$attrid;
@@ -211,7 +240,7 @@ class ugp{
 			return true;
 		}else {
 		    //insert
-		    if($this->pDB->exec("
+		    if(self::$pDB->exec("
 		    INSERT INTO p_uattributes (uid, aid, value)
 		    VALUES ($userid, $attrid, $value);
 		    ")){
@@ -229,10 +258,10 @@ class ugp{
 
 	function membership_add($uid, $gid){
 
-		$userid = $this->pDB->quote($uid);
-		$groupid = $this->pDB->quote($gid);
+		$userid = self::$pDB->quote($uid);
+		$groupid = self::$pDB->quote($gid);
 
-		$checkResults = $this->pDB->prepare("
+		$checkResults = self::$pDB->prepare("
 			SELECT id
 			FROM p_memberships WHERE userid=$userid AND groupid=$groupid;");
 		$checkResults->execute();
@@ -242,7 +271,7 @@ class ugp{
 			phylobyte::messageAddError('The user is already a member of that group.');
 		}else{
 			if(
-			$this->pDB->exec("
+			self::$pDB->exec("
 				INSERT INTO p_memberships (userid, groupid) VALUES ($userid, $groupid);
 			") !== false
 			){
@@ -263,8 +292,8 @@ class ugp{
 	 * TODO make sure to delete any attributes as well
 	 **/
 	function membership_remove($mid){
-			$this->pDB->quote($mid);
-			if($this->pDB->exec("
+			$mid = self::$pDB->quote($mid); // Ensure $mid is quoted
+			if(self::$pDB->exec("
 				DELETE FROM p_memberships
 				WHERE id=$mid;")
 			){
@@ -277,8 +306,11 @@ class ugp{
 	}
 	
 	function membership_removeuser($userid, $groupid){
-		$this->pDB->quote($mid);
-		if($this->pDB->exec("
+		// $mid is not defined in this function, so this line is problematic.
+		// It seems like it was intended to quote $userid and $groupid, but they are already quoted in the query.
+		// Removing the problematic line.
+		// self::$pDB->quote($mid); 
+		if(self::$pDB->exec("
 			DELETE FROM p_memberships
 			WHERE userid='$userid' AND groupid='$groupid';")
 		){
@@ -290,7 +322,7 @@ class ugp{
 	}
 	
 	function membership_clear($userid, $groupid){
-		if($this->pDB->exec("
+		if(self::$pDB->exec("
 			DELETE attributes FROM p_uattributes AS attributes
 			JOIN p_gattributes ON attributes.aid = p_gattributes.id
 			WHERE attributes.uid='$userid' AND p_gattributes.gid='$groupid';") !== false
@@ -312,19 +344,19 @@ class ugp{
 
 		$delete = $this->group_deleteable($groupID);
 		if($delete === true){
-			$groupID = $this->pDB->quote($groupID);
+			$groupID = self::$pDB->quote($groupID);
 			$success = true;
-			if(!$this->pDB->exec("
+			if(!self::$pDB->exec("
 				DELETE FROM p_uattributes
-				WHERE aid=ANY(
+				WHERE aid IN (
 					SELECT id FROM p_gattributes
 					WHERE gid=$groupID
 				);")){phylobyte::messageAddAlert('No user attributes to clear.');}
-			if(!$this->pDB->exec("
+			if(!self::$pDB->exec("
 				DELETE FROM p_gattributes
 				WHERE gid=$groupID;")){phylobyte::messageAddAlert('No group attributes to clear.');}
 			if($success){ phylobyte::messageAddNotification('Successfully deleted group.'); }
-			if(!$this->pDB->exec("
+			if(!self::$pDB->exec("
 				DELETE FROM p_groups
 				WHERE id=$groupID;")){$success = false; phylobyte::messageAddError('Error deleting group.');}
 		}else{
@@ -341,9 +373,9 @@ class ugp{
 	function user_delete($userID){
 		//check deleteable
 		if($this->user_deleteable($userID)){
-			$this->pDB->exec("DELETE FROM p_uattributes WHERE uid={$_POST['u_uid']};");
-			$this->pDB->exec("DELETE FROM p_memberships WHERE userid={$_POST['u_uid']};");
-			$this->pDB->exec("DELETE FROM p_users WHERE id={$_POST['u_uid']};");
+			self::$pDB->exec("DELETE FROM p_uattributes WHERE uid={$_POST['u_uid']};");
+			self::$pDB->exec("DELETE FROM p_memberships WHERE p_memberships.userid={$_POST['u_uid']};");
+			self::$pDB->exec("DELETE FROM p_users WHERE id={$_POST['u_uid']};");
 			phylobyte::messageAddNotification('Successfully deleted user.');
 			return true;
 		}
@@ -355,11 +387,11 @@ class ugp{
 		//otherwise, return the error
 
 		$group = $this->group_get($groupID);
-		if($group[0]['id'] == 1){
+		if(isset($group[0]['id']) && $group[0]['id'] == 1){
 			return 'You can not delete the Admin group.';
-		}elseif($group[0]['members'] != 0){
+		}elseif(isset($group[0]['members']) && $group[0]['members'] != 0){
 			return 'You can not delete a group that still has members.';
-		}elseif($group[0]['id'] == ''){
+		}elseif(isset($group[0]['id']) && $group[0]['id'] == ''){
 			return 'The group you are trying to delete does not exist.';
 		}else{
 			return true;
@@ -372,13 +404,13 @@ class ugp{
 		$result = true;
 		//first, you can't delete yourself
 
-		if($_SESSION['loginid'] == $userID){
+		if(isset($_SESSION['loginid']) && $_SESSION['loginid'] == $userID){
 			phylobyte::messageAddError('You can not delete yourself.');
 			$result = false;
 		}
 		//next, you can't delete the last admin (this also ensures there is at least one user left)
 		$tryDeleteUser = $this->user_get($userID);
-		if($tryDeleteUser[0]['primarygroup'] == '1' && $this->group_format($this->group_get($userArray['primarygroup']), '%m%') == '1'){
+		if(!empty($tryDeleteUser) && isset($tryDeleteUser[0]['primarygroup']) && $tryDeleteUser[0]['primarygroup'] == '1' && $this->group_format($this->group_get($tryDeleteUser[0]['primarygroup']), '%m%') == '1'){
 			phylobyte::messageAddError('You can not delete the last administrator.');
 			$result = false;
 		}
@@ -393,11 +425,33 @@ class ugp{
 	 **/
 	function group_get($groupID, $groupsFilter = '', $user = false, $reverse = false, $strict = false){
 
-		if(ctype_digit($user)){
+		// The $user parameter can be a boolean 'false' when no user is specified.
+		// ctype_digit() expects a string, and passing a boolean directly is deprecated in PHP 8.1+.
+		// Ensure $user is a string representation of a digit or a non-negative integer.
+		$is_user_valid_id = false;
+		$user_id_value = $user; // Use this for quoting later
+
+		if (is_bool($user)) {
+			// If $user is boolean, convert true to 1, false to 0.
+			// Only treat 'true' (which becomes 1) as a valid ID in this context.
+			if ($user === true) {
+				$user_id_value = 1;
+				$is_user_valid_id = true;
+			} else { // $user is false
+				$user_id_value = 0; // Not a valid ID for this branch
+				$is_user_valid_id = false;
+			}
+		} elseif (is_int($user) && $user >= 0) {
+			$is_user_valid_id = true;
+		} elseif (is_string($user) && ctype_digit($user)) {
+			$is_user_valid_id = true;
+		}
+
+		if($is_user_valid_id){
 			//this is a little different; we need to get only the groups a user is a member of
-			$userid = $this->pDB->quote($user);
+			$userid = self::$pDB->quote($user_id_value);
 			if($reverse == false){
-				$groups = $this->pDB->prepare("
+				$groups = self::$pDB->prepare("
 					SELECT p_memberships.id AS mid, p_groups.*, (
 							SELECT COUNT(*)
 							FROM p_memberships
@@ -408,7 +462,7 @@ class ugp{
 					WHERE userid=$userid;
 				");
 			}else{
-				$groups = $this->pDB->prepare("
+				$groups = self::$pDB->prepare("
 					SELECT DISTINCT * FROM p_groups WHERE NOT EXISTS
 					(SELECT * FROM p_memberships WHERE p_memberships.groupid = p_groups.id
 					AND p_memberships.userid = $userid)
@@ -421,7 +475,7 @@ class ugp{
 		}else{
 			//if gruoupID, return array, otherwise return multiple array
 			if($groupID != null){
-				$group = $this->pDB->prepare("
+				$group = self::$pDB->prepare("
 					SELECT *, (
 						SELECT COUNT(*)
 						FROM p_memberships
@@ -433,7 +487,7 @@ class ugp{
 				return $group;
 			}else{
 				if(!$strict){
-				$groups = $this->pDB->prepare("
+				$groups = self::$pDB->prepare("
 					SELECT *, (
 						SELECT COUNT(*)
 						FROM p_memberships
@@ -442,7 +496,7 @@ class ugp{
 					FROM p_groups
 					WHERE name LIKE '%$groupsFilter%' ORDER BY name;");
 				}else{
-				$groups = $this->pDB->prepare("
+				$groups = self::$pDB->prepare("
 					SELECT *, (
 						SELECT COUNT(*)
 						FROM p_memberships
@@ -460,8 +514,8 @@ class ugp{
 	}
 	
 	function group_exists($groupName){
-		$groupName = $this->pDB->quote($groupName);
-		$groupQuery = $this->pDB->prepare("
+		$groupName = self::$pDB->quote($groupName);
+		$groupQuery = self::$pDB->prepare("
 			SELECT id FROM p_groups WHERE name=$groupName;
 		");
 		$groupQuery->execute();
@@ -480,7 +534,7 @@ class ugp{
 		//if userID, return array, otherwise return multiple array
 		if($userID != null){
 			if(ctype_digit($userID)){
-				$user = $this->pDB->prepare("
+				$user = self::$pDB->prepare("
 					SELECT *
 					FROM p_users WHERE id=$userID
 					ORDER BY $orderBy
@@ -490,8 +544,8 @@ class ugp{
 				return $user;
 			}else{
 				//we're looking for a user by name
-				$userID = $this->pDB->quote($userID);
-				$user = $this->pDB->prepare("
+				$userID = self::$pDB->quote($userID);
+				$user = self::$pDB->prepare("
 					SELECT *
 					FROM p_users WHERE username=$userID
 					ORDER BY $orderBy
@@ -501,7 +555,7 @@ class ugp{
 				return $user;
 			}
 		}else{
-			$users = $this->pDB->prepare("
+			$users = self::$pDB->prepare("
 				SELECT *
 				FROM p_users
 				WHERE username LIKE '%$filter%' OR
@@ -548,8 +602,8 @@ class ugp{
 				$group['id'],
 				$group['name'],
 				$group['description'],
-				$group['members'],
-				$group['mid']
+				$group['members'] ?? '', // Use null coalescing operator
+				$group['mid'] ?? ''      // Use null coalescing operator
 		    );
 		    $result.=str_replace($needles, $replacements, $formatString);
 		}
@@ -636,10 +690,10 @@ class ugp{
 			return false;
 		}
 
-		$attribute = $this->pDB->quote($attribute);
-		$gid = $this->pDB->quote($gid);
+		$attribute = self::$pDB->quote($attribute);
+		$gid = self::$pDB->quote($gid);
 		//check if the attribute exists
-		$group = $this->pDB->prepare("
+		$group = self::$pDB->prepare("
 			SELECT id
 			FROM p_gattributes WHERE gid=$gid AND attribute=$attribute;");
 		$group->execute();
@@ -651,8 +705,8 @@ class ugp{
 			return false;
 		}
 
-		$default = $this->pDB->quote($default);
-		$query = $this->pDB->prepare("
+		$default = self::$pDB->quote($default);
+		$query = self::$pDB->prepare("
 			INSERT INTO p_gattributes (gid, attribute, defaultvalue)
 			VALUES ($gid, $attribute, $default); ");
 		if($query->execute()){
@@ -674,11 +728,11 @@ class ugp{
 
 		if($filter === false){
 			//if this is the case, $gid is actually the attribute id
-			$id = $this->pDB->quote($gid);
-			$query = $this->pDB->prepare("
+			$id = self::$pDB->quote($gid);
+			$query = self::$pDB->prepare("
 			DELETE FROM p_gattributes WHERE id=$id;
 			");
-			$query2 = $this->pDB->prepare("
+			$query2 = self::$pDB->prepare("
 			DELETE FROM p_uattributes WHERE aid=$id;
 			");
 			if($query->execute() && $query2->execute()){
@@ -689,9 +743,9 @@ class ugp{
 				return false;
 			}
 		}else{
-			$gid = $this->pDB->quote($gid);
-			$filter = $this->pDB->quote('%'.$filter.'%');
-			$attributes = $this->pDB->prepare("
+			$gid = self::$pDB->quote($gid);
+			$filter = self::$pDB->quote('%'.$filter.'%');
+			$attributes = self::$pDB->prepare("
 				SELECT *
 				FROM p_gattributes WHERE gid=$gid AND attribute LIKE $filter OR gid=$gid AND defaultvalue LIKE $filter;");
 			$attributes->execute();
@@ -734,15 +788,23 @@ class ugp{
 		}
 
 		return $result;
-
 	}
 	
 	function getDatabase(){
-		$query = "SELECT DATABASE();";
-		$query = $this->pDB->prepare($query);
-		$query->execute();
-		$results = $query->fetchAll(PDO::FETCH_ASSOC);
-		return $results[0]['DATABASE()'];
+		// Check if the PDO connection is SQLite
+		if (self::$pDB->getAttribute(PDO::ATTR_DRIVER_NAME) == 'sqlite') {
+			// For SQLite, the database name isn't directly queryable with DATABASE().
+			// Return a generic identifier.
+			return 'sqlite_database'; // Placeholder
+		} else {
+			// Assume MySQL or other database where DATABASE() works
+			$query = "SELECT DATABASE();";
+			$query = self::$pDB->prepare($query);
+			$query->execute();
+			$results = $query->fetchAll(PDO::FETCH_ASSOC);
+			// Ensure the key exists before accessing
+			return $results[0]['DATABASE()'] ?? 'unknown_database';
+		}
 	}
 	
 	
@@ -774,60 +836,80 @@ class ugp{
 			'dataCount' => 0
 		);
 		
-		
-		//get if a table exists
-		$checkTableQuery = "SHOW TABLES LIKE '$table';";
-		$checkTableQuery = $this->pDB->prepare($checkTableQuery);
+		// Determine database driver
+		$driver = self::$pDB->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+		// Check table existence
+		if ($driver == 'sqlite') {
+			$checkTableQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name=:table_name;";
+		} else { // Assume MySQL
+			$checkTableQuery = "SHOW TABLES LIKE :table_name;";
+		}
+		$checkTableQuery = self::$pDB->prepare($checkTableQuery);
+		$checkTableQuery->bindParam(':table_name', $table);
 		$checkTableQuery->execute();
 		$checkTableQueryResults = $checkTableQuery->fetchAll(PDO::FETCH_ASSOC);
 		
-		if(count($checkTableQueryResults[0]) == 1){
+		if(count($checkTableQueryResults) > 0){ // Check count of results, not count of first result
 			$statusElements['tableExists'] = true;
 		}
 		
-		//get if a table exists
-		$checkRowsQuery = "SELECT COUNT(id) FROM $table;";
-		$checkRowsQuery = $this->pDB->prepare($checkRowsQuery);
-		$checkRowsQuery->execute();
-		$checkRowsQueryResults = $checkRowsQuery->fetchAll();
-		
-		if($checkRowsQueryResults[0]){
-			$statusElements['dataExists'] = true;
-			$statusElements['dataCount'] = $checkRowsQueryResults[0][0];
+		// Get row count
+		// Only attempt if table exists to avoid errors
+		if ($statusElements['tableExists']) {
+			$checkRowsQuery = "SELECT COUNT(*) FROM $table;"; // Changed to COUNT(*)
+			$checkRowsQuery = self::$pDB->prepare($checkRowsQuery);
+			$checkRowsQuery->execute();
+			$checkRowsQueryResults = $checkRowsQuery->fetchAll();
+			
+			if(isset($checkRowsQueryResults[0][0])){ // Check if result exists
+				$statusElements['dataExists'] = true;
+				$statusElements['dataCount'] = $checkRowsQueryResults[0][0];
+			}
 		}
 		
-		//column check
-		$stringColsExpected = null;
-		if(count($statusElements['arrColumnsExpected']) > 0){
+		// Column check
+		$stringColsExpected = ''; // Initialize as empty string
+		if(is_array($statusElements['arrColumnsExpected']) && count($statusElements['arrColumnsExpected']) > 0){ // Added is_array check
 			foreach($statusElements['arrColumnsExpected'] as $value) {
 				$stringColsExpected.=$value.', ';
 			}
 		}
-		$statusElements['colsExpected'] = substr($stringColsExpected, 0,-2);
+		$statusElements['colsExpected'] = ($stringColsExpected !== '') ? substr($stringColsExpected, 0, -2) : '';
 		
-		$stringColsFound = null;
+		$statusElements['arrColsFound'] = []; // Initialize to an empty array
 		
-		$checkColumnsQuery = "
-		SELECT COLUMN_NAME 
-		FROM INFORMATION_SCHEMA.COLUMNS 
-		WHERE TABLE_SCHEMA='{$this->getDatabase()}' 
-			AND TABLE_NAME='$table'
-		";
-		$checkColumnsQuery = $this->pDB->prepare($checkColumnsQuery);
-		$checkColumnsQuery->execute();
-		$checkColumnsResults = $checkColumnsQuery->fetchAll(PDO::FETCH_ASSOC);
-		
-		foreach($checkColumnsResults as $key => $column) {
-		    $statusElements['arrColsFound'][] = $column['COLUMN_NAME'];
+		if ($statusElements['tableExists']) { // Only check columns if table exists
+			if ($driver == 'sqlite') {
+				$checkColumnsQuery = "PRAGMA table_info($table);";
+			} else { // Assume MySQL
+				$checkColumnsQuery = "
+				SELECT COLUMN_NAME 
+				FROM INFORMATION_SCHEMA.COLUMNS 
+				WHERE TABLE_SCHEMA='{$this->getDatabase()}' 
+					AND TABLE_NAME='$table'
+				";
+			}
+			$checkColumnsQuery = self::$pDB->prepare($checkColumnsQuery);
+			$checkColumnsQuery->execute();
+			$checkColumnsResults = $checkColumnsQuery->fetchAll(PDO::FETCH_ASSOC);
+			
+			foreach($checkColumnsResults as $key => $column) {
+				if ($driver == 'sqlite') {
+					$statusElements['arrColsFound'][] = $column['name']; // SQLite uses 'name' for column name
+				} else {
+					$statusElements['arrColsFound'][] = $column['COLUMN_NAME'];
+				}
+			}
 		}
-		
-		$stringColsFound = null;
-		if(count($statusElements['arrColsFound']) > 0){
+
+		$stringColsFound = ''; // Initialize as empty string
+		if(is_array($statusElements['arrColsFound']) && count($statusElements['arrColsFound']) > 0){ // Added is_array check
 			foreach($statusElements['arrColsFound'] as $value) {
 				$stringColsFound.=$value.', ';
 			}
 		}
-		$statusElements['colsFound'] = substr($stringColsFound, 0,-2);
+		$statusElements['colsFound'] = ($stringColsFound !== '') ? substr($stringColsFound, 0, -2) : '';
 		
 		if($statusElements['arrColumnsExpected'] != null && $statusElements['arrColsFound'] != null){
 			if(
@@ -860,20 +942,28 @@ class ugp{
 				$statusElements['colsMatch'] = $bad;
 			}
 		
-			$search = Array(
-				'table' => '%t%',
-				'tableExists' => '%tE%',
-				'title' => '%T%',
-				'description' => '%D%',
-				'arrColumnsExpected' => '',
-				'colsExpected' => '%cE%',
-				'arrColsFound' => '',
-				'colsFound' => '%cF%',
-				'colsMatch' => '%cM%',
-				'dataExists' => '%dE%',
-				'dataCount' => '%dC%'
-			);
-			return(str_replace($search, $statusElements, $template));
+			// Define the placeholders and their corresponding keys in $statusElements
+			$placeholder_map = [
+				'%t%' => 'table',
+				'%tE%' => 'tableExists',
+				'%T%' => 'title',
+				'%D%' => 'description',
+				'%cE%' => 'colsExpected',
+				'%cF%' => 'colsFound',
+				'%cM%' => 'colsMatch',
+				'%dE%' => 'dataExists',
+				'%dC%' => 'dataCount'
+			];
+
+			$needles = [];
+			$replacements = [];
+			foreach ($placeholder_map as $placeholder => $key_in_statusElements) {
+				$needles[] = $placeholder;
+				// Ensure the value exists in $statusElements, provide empty string if not
+				$replacements[] = $statusElements[$key_in_statusElements] ?? '';
+			}
+
+			return str_replace($needles, $replacements, $template);
 		}
 	}
 

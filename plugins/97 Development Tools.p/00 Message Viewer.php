@@ -1,6 +1,6 @@
 <?php
 
-	
+	$viewmessages = ''; // Initialize $viewmessages to an empty string
 	$viewmessages.='<h3>Last 20 Error Messages:</h3>';
 	$viewmessages.= $GLOBALS['MESSAGES']->pullquery('<div style="display: block; margin-top: 1em; font-size: 80%;">%k%</div>%v%', "SELECT * FROM __REGISTRY____pmessages WHERE value LIKE '#e.%' ORDER BY value DESC LIMIT 20;");
 	$viewmessages.='<br/><h3>Last 20 Alerts:</h3>';

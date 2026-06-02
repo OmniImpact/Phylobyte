@@ -1,6 +1,6 @@
 <?php
 
-if($_GET['phpinfo'] != true){
+if(!isset($_GET['phpinfo']) || $_GET['phpinfo'] != true){
 
 	$sysinfo = posix_uname();
 
@@ -8,6 +8,7 @@ if($_GET['phpinfo'] != true){
 	$maxup = ini_get('upload_max_filesize');
 	if($maxup <= $maxpost){$maxsize = $maxup;}else{$maxsize = $maxpost;}
 
+	$extensions = ''; // Initialize $extensions
 	foreach(get_loaded_extensions() as $extension){
 		$extensions.=$extension.', ';
 	}
@@ -88,7 +89,7 @@ if($_GET['phpinfo'] != true){
 	</table>
 
 	";
-}elseif ($_GET['phpinfo'] == true) {
+}elseif (isset($_GET['phpinfo']) && $_GET['phpinfo'] == true) {
 
 	$this->messageAddAlert('The phpinfo() function provides a lot of information. Some of it could be used to attack your website. Please be careful who you give access to this information.');
     ob_start();

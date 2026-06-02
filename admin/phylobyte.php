@@ -20,6 +20,12 @@ class phylobyte{
 	static $phylobyteDB;
 
 	function __construct(){
+		// AIDO: hook into PHP's error handling so that errors, warnings, and deprecations are are caught and output into the message "pile"
+		// Set custom error handler
+		set_error_handler([$this, 'handle_error']);
+		error_reporting(E_ALL);
+		ini_set('display_errors', 0);
+
 
 		$this->pageTitle = 'Phylobyte CMS';
 		$this->messageArea = ''; // Initialize messageArea to an empty string
@@ -195,6 +201,32 @@ class phylobyte{
 			// The pageArea and docArea are already populated by loginform.php
 		}
 		self::messageAddDebug('__construct() finished. pageArea length: ' . strlen((string)$this->pageArea) . ', docArea length: ' . strlen((string)$this->docArea) . ', navigationArea length: ' . strlen((string)self::$navigationArea));
+	}
+
+	public function handle_error($errno, $errstr, $errfile, $errline) {
+		$error_message = "<b>Error:</b> [$errno] $errstr<br><b>File:</b> $errfile<br><b>Line:</b> $errline";
+		switch ($errno) {
+			case E_USER_ERROR:
+			case E_ERROR:
+			case E_RECOVERABLE_ERROR:
+				self::messageAddError($error_message);
+				break;
+			case E_USER_WARNING:
+			case E_WARNING:
+				self::messageAddAlert($error_message);
+				break;
+			case E_USER_NOTICE:
+			case E_NOTICE:
+			case E_USER_DEPRECATED:
+			case E_DEPRECATED:
+				self::messageAddAlert($error_message);
+				break;
+			default:
+				self::messageAddDebug($error_message);
+				break;
+		}
+		/* Don't execute PHP internal error handler */
+		return true;
 	}
 
 	static function messageStamp(){
@@ -464,6 +496,7 @@ class phylobyte{
 		if($return == 'array'){
 			return $this->pluginFunctions;
 		}else{
+			$autoIndex = ''; // Initialize $autoIndex here
 			if(is_array($this->pluginFunctions)){
 				foreach($this->pluginFunctions as $function){
 					$functionName = substr(trim(preg_replace('#^\d+#', '', stripslashes($function))), 0, -4);

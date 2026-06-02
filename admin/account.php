@@ -1,6 +1,6 @@
 <?php
 //breadcrumbs
-$this->breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?phylobyte=account">Account</a>';
+self::$breadcrumbs.='<a href="?">Home</a> &raquo; <a href="?phylobyte=account">Account</a>';
 
 //process
 
@@ -10,65 +10,73 @@ $EV = new EmailAddressValidator;
 
 if(isset($_POST['p_submit'])){
 
-	$userquery = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
+	$userquery = self::$phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
 	$userquery->execute();
 	$userqueryArray = $userquery->fetchAll();
 	$userqueryArray = $userqueryArray[0];
 	
-	$this->sessionUserInfo = $userqueryArray;
+	self::$sessionUserInfo = $userqueryArray;
 
-	if(sha1(stripslashes($_POST['p_currentpass'])) == $this->sessionUserInfo['passwordhash']){
+	$p_currentpass = isset($_POST['p_currentpass']) ? stripslashes($_POST['p_currentpass']) : '';
+	$p_password1 = isset($_POST['p_password1']) ? stripslashes($_POST['p_password1']) : '';
+	$p_password2 = isset($_POST['p_password2']) ? stripslashes($_POST['p_password2']) : '';
+	$p_username = isset($_POST['p_username']) ? stripslashes($_POST['p_username']) : '';
+	$p_email = isset($_POST['p_email']) ? stripslashes($_POST['p_email']) : '';
+	$p_name = isset($_POST['p_name']) ? stripslashes($_POST['p_name']) : '';
+
+
+	if(sha1($p_currentpass) == self::$sessionUserInfo['passwordhash']){
 		//user entered correct password, ready to check updates
 
-		if(strlen(stripslashes($_POST['p_password1'])) < 5 && $_POST['p_password1'] != null){
+		if(strlen($p_password1) < 5 && $p_password1 != null){
 			$this->messageAddError('Password must be more than five characters.');
-		}elseif (stripslashes($_POST['p_password1']) == stripslashes($_POST['p_password2']) && $_POST['p_password1'] != null) {
-			$passwordhash = sha1(stripslashes($_POST['p_password1']));
+		}elseif ($p_password1 == $p_password2 && $p_password1 != null) {
+			$passwordhash = sha1($p_password1);
 			$this->messageAddNotification('Updating Password...');
 		}else {
-			$passwordhash = $this->sessionUserInfo['passwordhash'];
+			$passwordhash = self::$sessionUserInfo['passwordhash'];
 		}
 		
-		if(trim($_POST['p_username']) != ''){
-			$username = stripslashes($_POST['p_username']);
+		if(trim($p_username) != ''){
+			$username = $p_username;
 			$this->messageAddNotification('Updating User Name...');
 		}else {
-		    $username = $this->sessionUserInfo['username'];
+		    $username = self::$sessionUserInfo['username'];
 		}
 		
-	}elseif($_POST['p_username'] != null || $_POST['p_password1'] != null || $_POST['p_password2'] != null){
+	}elseif($p_username != null || $p_password1 != null || $p_password2 != null){
 		$this->messageAddError('There was a problem updating your login details.');
-		$username = $this->sessionUserInfo['username'];
-		$passwordhash = $this->sessionUserInfo['passwordhash'];
+		$username = self::$sessionUserInfo['username'];
+		$passwordhash = self::$sessionUserInfo['passwordhash'];
 	}else{
-		$username = $this->sessionUserInfo['username'];
-		$passwordhash = $this->sessionUserInfo['passwordhash'];
+		$username = self::$sessionUserInfo['username'];
+		$passwordhash = self::$sessionUserInfo['passwordhash'];
 	}
 
-	if(trim($_POST['p_email']) != null){
-		$email = stripslashes($_POST['p_email']);
+	if(trim($p_email) != null){
+		$email = $p_email;
 	}else{
-		$email = $this->sessionUserInfo['email'];
+		$email = self::$sessionUserInfo['email'];
 	}
 
-	if(trim($_POST['p_name']) != null){
-		$name = stripslashes($_POST['p_name']);
+	if(trim($p_name) != null){
+		$name = $p_name;
 	}else{
-		$name = $this->sessionUserInfo['name'];
+		$name = self::$sessionUserInfo['name'];
 	}
 
 	//now that any potential changes have been saved to the session, update the database
-	$name = $this->phylobyteDB->quote($name);
-	if($this->phylobyteDB->exec("
+	$name = self::$phylobyteDB->quote($name);
+	if(self::$phylobyteDB->exec("
 			UPDATE p_users SET username='$username', passwordhash='$passwordhash', status='active', email='$email', name=$name
 			WHERE id={$_SESSION['loginid']};
 			") > 0) $this->messageAddNotification('Your changes have been saved.');
 
-	$userquery = $this->phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
+	$userquery = self::$phylobyteDB->prepare("SELECT * FROM p_users WHERE id='{$_SESSION['loginid']}';");
 	$userquery->execute();
 	$userqueryArray = $userquery->fetchAll();
 	$userqueryArray = $userqueryArray[0];
-	$this->sessionUserInfo = $userqueryArray;
+	self::$sessionUserInfo = $userqueryArray;
 
 }
 		
@@ -94,12 +102,16 @@ Although Phylobyte only enforces passwords more than five characters, there are 
 
 ';
 
-$this->pageArea = '
+$name = self::$sessionUserInfo['name'] ?? '';
+$email = self::$sessionUserInfo['email'] ?? '';
+$username = self::$sessionUserInfo['username'] ?? '';
+
+$this->pageArea = <<<HTML
 <script type="text/javascript" src="../plugins/nicEdit.js"></script>
 
 <!--<script type="text/javascript">
 bkLib.onDomLoaded(function() {
-	new nicEditor({buttonList : [\'bold\',\'italic\',\'underline\',\'ol\',\'ul\'], iconsPath : \'../plugins/nicEditorIcons.gif\'}).panelInstance(\'p_description\');
+	new nicEditor({buttonList : ['bold','italic','underline','ol','ul'], iconsPath : '../plugins/nicEditorIcons.gif'}).panelInstance('p_description');
 });
 </script>-->
 
@@ -107,8 +119,8 @@ bkLib.onDomLoaded(function() {
 	<legend>My Acount Details</legend>
 <form action="?phylobyte=account" method="POST">
 
-	<label for="p_name">Nick Name</label><input type="text" name="p_name" value="'.$this->sessionUserInfo['name'].'"/><br/>
-	<label for="p_email">eMail Address</label><input type="text" name="p_email" value="'.$this->sessionUserInfo['email'].'"/><br/>
+	<label for="p_name">Nick Name</label><input type="text" name="p_name" value="$name"/><br/>
+	<label for="p_email">eMail Address</label><input type="text" name="p_email" value="$email"/><br/>
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Save Account Details" />
 		<div class="ff">&nbsp;</div>
 </form>
@@ -118,15 +130,12 @@ bkLib.onDomLoaded(function() {
 	<legend>Change Login Details</legend>
 <form action="?phylobyte=account" method="POST">
 	<label for="p_currentpass">Current Password</label><input type="password" name="p_currentpass" value=""/><hr/>
-	<label for="p_username">User Name</label><input type="text" name="p_username" value="'.$this->sessionUserInfo['username'].'"/><br/>
+	<label for="p_username">User Name</label><input type="text" name="p_username" value="$username"/><br/>
 	<label for="p_password1">Password</label><input type="password" name="p_password1" value=""/><br/>
 	<label for="p_password2">Password (again)</label><input type="password" name="p_password2" value=""/><br/>
 	<label for="p_submit">&nbsp;</label><input type="submit" name="p_submit" value="Save Login Details" />
 		<div class="ff">&nbsp;</div>
 </form>
 </fieldset>
-';
-
-return false;
+HTML;
 ?>
- 
